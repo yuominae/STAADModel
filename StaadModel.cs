@@ -128,6 +128,9 @@ namespace STAADModel
             // Get load combinations
             this.BuildLoadCombinations();
 
+            // Classfiy the beams in the model
+            this.ClassifyBeams();
+
             // Notify any listeners that the model build has compelted
             this.OnModelBuildComplete();
         }
@@ -336,15 +339,13 @@ namespace STAADModel
             if (this.EnableParallelBuild)
                 Parallel.ForEach(((int[])ids), id => {
                     nodes.Add(this.GetNode(id));
-                    count++;
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), ids.Length));
                 });
             else
                 foreach (int id in (int[])ids)
                 {
                     nodes.Add(this.GetNode(id));
-                    count++;
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, ++count, ids.Length));
                 }
 
             this.Nodes = new HashSet<Node>(nodes.OrderBy(o => o.ID));
@@ -371,7 +372,7 @@ namespace STAADModel
                 foreach (Node node in this.Nodes.Where(n => ((int[])ids).Contains(n.ID)))
                 {
                     node.Support = this.GetSupport(node.ID);
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count++, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status,++count, ids.Length));
                 }
             }
         }
@@ -396,15 +397,13 @@ namespace STAADModel
             if (this.EnableParallelBuild)
                 Parallel.ForEach(((int[])ids), id => {
                     beams.Add(this.GetBeam(id));
-                    count++;
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), ids.Length));
                 });
             else
                 foreach (int id in (int[])ids)
                 {
                     beams.Add(this.GetBeam(id));
-                    count++;
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, ++count, ids.Length));
                 }
 
             this.Beams = new HashSet<Beam>(beams.OrderBy(o => o.ID));
@@ -457,13 +456,13 @@ namespace STAADModel
             if (this.EnableParallelBuild)
                 Parallel.ForEach(((int[])ids), id => {
                     sectionProperties.Add(this.GetSectionProperty(id));
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count++, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), ids.Length));
                 });
             else
                 foreach (int id in (int[])ids)
                 {
                     this.SectionProperties.Add(this.GetSectionProperty(id));
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count++, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, ++count, ids.Length));
                 }
 
             this.SectionProperties = new HashSet<SectionProperty>(sectionProperties.OrderBy(o => o.ID));
@@ -490,13 +489,13 @@ namespace STAADModel
                 Parallel.ForEach(((int[])ids), id =>
                 {
                     loadCases.Add(this.GetLoadCase(id));
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count++, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), ids.Length));
                 });
             else
                 foreach (int id in (int[])ids)
                 {
                     loadCases.Add(this.GetLoadCase(id));
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, count++, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, ++count, ids.Length));
                 }
 
             this.LoadCases = new HashSet<LoadCase>(loadCases.OrderBy(o => o.ID));
@@ -540,10 +539,45 @@ namespace STAADModel
                     loadCase.LoadCombinations.Add(loadCombination);
         }
 
+        /// <summary>
+        /// Classify the beams in the model accordin to their specifications
+        /// </summary>
         private void ClassifyBeams()
         {
+            const string status = "Classifying beams...";
+            int beamsProcessed;
+            int totalBeamToProcess;
+            HashSet<Beam> beamsToProcess;
+
+            beamsToProcess = new HashSet<Beam>(this.Beams);
+            beamsProcessed = 0;
+            totalBeamToProcess = beamsToProcess.Count;
+
             // Any vertical beam attached directly to a support node is a column
-            
+            Parallel.ForEach(beamsToProcess.Where(b => b.StartNode.IsSupport || b.EndNode.IsSupport && (this.ZAxisUp ? b.IsParallelToZ : b.IsParallelToY)), beam =>
+                {
+                    foreach (Beam parallelBeam in BeamHelpers.GatherParallelBeams(beam))
+                    {
+                        parallelBeam.Type = BEAMTYPE.COLUMN;
+                        this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref beamsProcessed), totalBeamToProcess));
+                    }
+                });
+            beamsToProcess.RemoveWhere(b => b.Type == BEAMTYPE.COLUMN);
+
+            // Classify all remaining beams
+            // If a beam is vertical and not a column, then it is a post, otehrwise it is a beam
+            // All other beams are classified as braces
+            Parallel.ForEach(beamsToProcess, beam =>
+                {
+                    if (beam.Spec == BEAMSPEC.UNSPECIFIED)
+                        if ((this.ZAxisUp && beam.IsParallelToZ) || !this.ZAxisUp && beam.IsParallelToY)
+                            beam.Type = BEAMTYPE.POST;
+                        else
+                            beam.Type = BEAMTYPE.BEAM;
+                    else
+                        beam.Type = BEAMTYPE.BRACE;
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref beamsProcessed), totalBeamToProcess));
+                });
         }
 
         /// <summary>

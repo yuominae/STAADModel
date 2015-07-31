@@ -165,6 +165,8 @@ namespace STAADModel
 
         public BEAMSPEC Spec { get; set; }
 
+        public BEAMTYPE Type { get; set; }
+
         public Member Member { get; set; }
 
         public HashSet<NodeDisplacements> StartNodeDisplacements

@@ -32,7 +32,7 @@ namespace STAADModel
             Dictionary<string, OpenSTAAD> runningInstances = GetRunningOpenSTAADInstances();
 
             if (!runningInstances.Any())
-                throw new Exception("No running OpenSTAAD instances found");
+                throw new STAADRunningInstanceNotFoundException();
 
             if (string.IsNullOrEmpty(staadFilename))
                 return runningInstances.First().Value;

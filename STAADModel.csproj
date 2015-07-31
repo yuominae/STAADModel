@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Beam.cs" />
     <Compile Include="BeamForces.cs" />
+    <Compile Include="Exceptions\STAADRunningInstanceNotFoundException.cs" />
     <Compile Include="ILoadCase.cs" />
     <Compile Include="LoadCase.cs" />
     <Compile Include="LoadCombination.cs" />
