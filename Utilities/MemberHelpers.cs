@@ -1,0 +1,73 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace STAADModel
+{
+    public static class MemberHelpers
+    {
+        /// <summary>
+        /// Gather member which provide continuity with the specified member
+        /// </summary>
+        /// <param name="Member"></param>
+        /// <returns></returns>
+        public static IEnumerable<Member> GatherParallelMembers(Member Member, Node LastNode = null, bool MoveDownstream = false)
+        {
+            Node currentNode;
+            Member nextMember;
+            IEnumerable<Member> connectedParallelMembers;
+            HashSet<Member> parallelMembers;
+
+            parallelMembers = new HashSet<Member>();
+            if (MoveDownstream)
+                parallelMembers.Add(Member);
+
+            // Determine which will be the next node
+            currentNode = MemberHelpers.DetermineNextNode(Member, LastNode, MoveDownstream);
+
+            connectedParallelMembers = currentNode.ConnectedBeams.Select(b => b.Member).Where(m => m != null && m != Member && m.DetermineMemberRelation(Member) == MEMBERRELATION.PARALLEL);
+            if (connectedParallelMembers.Any())
+            {
+                nextMember = connectedParallelMembers.First();
+                parallelMembers.UnionWith(GatherParallelMembers(nextMember, currentNode, MoveDownstream));
+            }
+            else
+            {
+                if (!MoveDownstream)
+                    parallelMembers.UnionWith(GatherParallelMembers(Member, currentNode, true));
+            }
+
+            return parallelMembers;
+        }
+
+        /// <summary>
+        /// Determine the next node to go to on the specified member, depending on which the last node was
+        /// </summary>
+        /// <param name="Beam">The member to inspect</param>
+        /// <param name="LastNode">The previously visited node</param>
+        /// <param name="MoveDownstream">The direction in which to move along the member</param>
+        /// <returns>The next node</returns>
+        public static Node DetermineNextNode(Member Member, Node LastNode = null, bool MoveDownstream = false)
+        {
+            Node currentNode;
+
+            // Determine which will be the next node depending on the beam orientation and direction of travel
+            if (MoveDownstream)
+            {
+                currentNode = Member.EndNode;
+                if (LastNode != null && LastNode == Member.EndNode)
+                    currentNode = Member.StartNode;
+            }
+            else
+            {
+                currentNode = Member.StartNode;
+                if (LastNode != null && LastNode == Member.StartNode)
+                    currentNode = Member.EndNode;
+            }
+
+            return currentNode;
+        }
+    }
+}

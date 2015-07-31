@@ -1,0 +1,7 @@
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\bin\Release\STAADModel.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\bin\Release\STAADModel.pdb
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\obj\Release\Interop.OpenSTAADUI.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\obj\Release\STAADModel.csproj.ResolveComReference.cache
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\obj\Release\STAADModel.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\obj\Release\STAADModel.pdb
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\obj\Release\STAADModel.csprojResolveAssemblyReference.cache

@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FA91BCDF-4C09-47B6-B5DF-F0D7A7B39162}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>STAADModel</RootNamespace>
+    <AssemblyName>STAADModel</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Beam.cs" />
+    <Compile Include="BeamForces.cs" />
+    <Compile Include="ILoadCase.cs" />
+    <Compile Include="LoadCase.cs" />
+    <Compile Include="LoadCombination.cs" />
+    <Compile Include="NodeDisplacements.cs" />
+    <Compile Include="Releases.cs" />
+    <Compile Include="ParameterGenerators\BucklingLength.cs" />
+    <Compile Include="ParameterGenerators\BucklingLengthGenerator.cs" />
+    <Compile Include="ParameterGenerators\DeflectionLength.cs" />
+    <Compile Include="ParameterGenerators\DeflectionLengthGenerator.cs" />
+    <Compile Include="MemberGenerator\DefaultMemberGeneratorConfiguration.cs" />
+    <Compile Include="EventArgs\ModelBuildStatusUpdateEventArgs.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="Support.cs" />
+    <Compile Include="Utilities\BeamHelpers.cs" />
+    <Compile Include="Utilities\ExtensionMethods.cs" />
+    <Compile Include="MemberGenerator\IMemberGenerator.cs" />
+    <Compile Include="MemberGenerator\IMemberGeneratorConfiguration.cs" />
+    <Compile Include="Material.cs" />
+    <Compile Include="Member.cs" />
+    <Compile Include="MemberGenerator\DefaultMemberGenerator.cs" />
+    <Compile Include="EventArgs\MemberGeneratorStatusUpdateEventArgs.cs" />
+    <Compile Include="StaadModel.cs" />
+    <Compile Include="ModelChecks.cs" />
+    <Compile Include="Node.cs" />
+    <Compile Include="OpenStaadGetter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SectionProperty.cs" />
+    <Compile Include="Staad.cs" />
+    <Compile Include="Utilities\MemberHelpers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="OpenSTAADUI">
+      <Guid>{EDA9FA7F-EFC9-4264-9513-39CF6E72604D}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

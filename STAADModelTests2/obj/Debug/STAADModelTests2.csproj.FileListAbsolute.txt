@@ -1,0 +1,10 @@
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\bin\Debug\STAADModelTests2.exe.config
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.csprojResolveAssemblyReference.cache
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\bin\Debug\STAADModelTests2.exe
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\bin\Debug\STAADModelTests2.pdb
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\bin\Debug\STAADModel.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\bin\Debug\STAADModel.pdb
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\obj\Debug\Interop.OpenSTAADUI.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.csproj.ResolveComReference.cache
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.exe
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.pdb
