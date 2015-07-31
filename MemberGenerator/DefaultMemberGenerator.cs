@@ -93,10 +93,10 @@ namespace STAADModel
             // Process truss members and beams which are pinned at both ends - If truss members won't be processed they are removed from the nodes as they are not needed for member generation
             if (this.Configuration.IgnoreTrussMembers && Beams.Any(o => o.Spec != BEAMSPEC.UNSPECIFIED))
             {
-                foreach (Beam b in Beams.Where(o => o.StartNode.ConnectedBeams.Any(b => b.Spec == BEAMSPEC.MEMBERTRUSS) || o.EndNode.ConnectedBeams.Any(b => b.Spec == BEAMSPEC.MEMBERTRUSS)))
+                foreach (Beam beam in Beams.Where(b => new List<Node>(){ b.StartNode, b.EndNode }.SelectMany(n => n.ConnectedBeams).Any(cb => cb.Spec != BEAMSPEC.UNSPECIFIED)))
                 {
-                    b.StartNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
-                    b.EndNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
+                    beam.StartNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
+                    beam.EndNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
                 }
                 Beams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
             }
@@ -309,7 +309,7 @@ namespace STAADModel
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs(status, 0.333));
 
             //Determine columns (Vertical members directly connected to supports)
-            foreach (Member member in Members.Where(m => m.IsParallelToY && m.IsSupported))
+            foreach (Member member in Members.Where(m => (this.StaadModel.ZAxisUp ? m.IsParallelToZ : m.IsParallelToY) && m.IsSupported))
             {
                 member.Type = MEMBERTYPE.COLUMN;
                 IEnumerable<Member> membersToCheck = new List<Member>() { member };
@@ -329,10 +329,10 @@ namespace STAADModel
 
             // Assign types to the remaining members
             foreach (Member member in Members.Where(m => m.Type == MEMBERTYPE.OTHER))
-                if (member.IsParallelToY)
+                if (this.StaadModel.ZAxisUp ? member.IsParallelToZ : member.IsParallelToY)
                     member.Type = MEMBERTYPE.POST;
                 else
-                    if (member.Beams.All(b => b.Spec != BEAMSPEC.MEMBERTRUSS))
+                    if (member.Beams.All(b => b.Spec != BEAMSPEC.UNSPECIFIED))
                         member.Type = MEMBERTYPE.BRACE;
                     else if (member.Beams.All(b => b.Spec == BEAMSPEC.UNSPECIFIED))
                         member.Type = MEMBERTYPE.BEAM;

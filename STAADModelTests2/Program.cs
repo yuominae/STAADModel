@@ -12,11 +12,12 @@ namespace STAADModelTests2
     class Program
     {
         private static string previouStatusMessage;
+        private static StaadModel model;
 
         static void Main(string[] args)
         {
             Stopwatch st;
-            StaadModel model;
+            ConsoleKey userInput;
 
             st = new Stopwatch();
             try
@@ -44,8 +45,11 @@ namespace STAADModelTests2
             Console.WriteLine("Model built in {0:0.000}s", st.Elapsed.TotalMilliseconds / 1000);
 
             //
-            Console.WriteLine("Press y to generate members, press any other key to quit...");
-            if (Console.ReadKey().Key != ConsoleKey.Y)
+            Console.WriteLine("Press s to select beams by type, y to generate members, press any other key to quit...");
+            userInput = Console.ReadKey().Key;
+            if (userInput == ConsoleKey.S)
+                SelectBeamsByType();
+            else if (userInput != ConsoleKey.Y)
                 return;
 
             Console.WriteLine();
@@ -56,11 +60,58 @@ namespace STAADModelTests2
             st.Stop();
             Console.WriteLine("Member generation completed in {0:0.000}s", st.Elapsed.TotalMilliseconds / 1000);
 
+            Console.WriteLine("Press s to select members by type, press any other key to quit...");
+            userInput = Console.ReadKey().Key;
+            if (userInput == ConsoleKey.S)
+                SelectMembersByType();
+            else
+                return;
+
 
             //BucklingLengthGenerator blg = new BucklingLengthGenerator(model) { SelectMembersDuringAnalysis = true };
 
             Console.WriteLine("Press any key to quit");
             Console.ReadKey();
+        }
+
+        static void SelectBeamsByType()
+        {
+            char userInput;
+            int[] typeValues;
+
+            typeValues = (int[])Enum.GetValues(typeof(BEAMTYPE));
+
+            Console.WriteLine("Select the type of beam to highlight in STAAD:");
+            foreach (int typeValue in typeValues)
+                Console.WriteLine("{0}. {1}", typeValue, Enum.GetName(typeof(BEAMTYPE), typeValue));
+            while (true)
+            {
+                userInput = Console.ReadKey().KeyChar;
+                if (char.IsDigit(userInput) && Enum.IsDefined(typeof(BEAMTYPE), int.Parse(userInput.ToString())))
+                    model.Staad.Geometry.SelectMultipleBeams(model.Beams.Where(b => b.Type == (BEAMTYPE)Enum.Parse(typeof(BEAMTYPE), userInput.ToString())).Select(b => b.ID).ToArray());
+                else
+                    break;
+            };
+        }
+
+        static void SelectMembersByType()
+        {
+            char userInput;
+            int[] typeValues;
+
+            typeValues = (int[])Enum.GetValues(typeof(MEMBERTYPE));
+
+            Console.WriteLine("Select the type of beam to highlight in STAAD:");
+            foreach (int typeValue in typeValues)
+                Console.WriteLine("{0}. {1}", typeValue, Enum.GetName(typeof(MEMBERTYPE), typeValue));
+            while (true)
+            {
+                userInput = Console.ReadKey().KeyChar;
+                if (char.IsDigit(userInput) && Enum.IsDefined(typeof(MEMBERTYPE), int.Parse(userInput.ToString())))
+                    model.Staad.Geometry.SelectMultipleBeams(model.Members.Where(m => m.Type == (MEMBERTYPE)Enum.Parse(typeof(MEMBERTYPE), userInput.ToString())).SelectMany(m => m.Beams).Select(b => b.ID).ToArray());
+                else
+                    break;
+            };
         }
 
         static void model_ModelBuildStatusUpdate(StaadModel sender, ModelBuildStatusUpdateEventArgs e)

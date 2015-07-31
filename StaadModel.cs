@@ -554,7 +554,7 @@ namespace STAADModel
             totalBeamToProcess = beamsToProcess.Count;
 
             // Any vertical beam attached directly to a support node is a column
-            Parallel.ForEach(beamsToProcess.Where(b => b.StartNode.IsSupport || b.EndNode.IsSupport && (this.ZAxisUp ? b.IsParallelToZ : b.IsParallelToY)), beam =>
+            Parallel.ForEach(beamsToProcess.Where(b => (b.StartNode.IsSupport || b.EndNode.IsSupport) && (this.ZAxisUp ? b.IsParallelToZ : b.IsParallelToY)), beam =>
                 {
                     foreach (Beam parallelBeam in BeamHelpers.GatherParallelBeams(beam))
                     {

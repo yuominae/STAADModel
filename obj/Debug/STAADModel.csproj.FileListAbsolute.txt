@@ -108,7 +108,6 @@ C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADM
 C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADModel_Version\STAADModel\obj\Debug\STAADModel.pdb
 C:\Users\RISE123\Documents\GitHub\STAADModel\bin\Debug\STAADModel.dll
 C:\Users\RISE123\Documents\GitHub\STAADModel\bin\Debug\STAADModel.pdb
-C:\Users\RISE123\Documents\GitHub\STAADModel\obj\Debug\STAADModel.csprojResolveAssemblyReference.cache
 C:\Users\RISE123\Documents\GitHub\STAADModel\obj\Debug\Interop.OpenSTAADUI.dll
 C:\Users\RISE123\Documents\GitHub\STAADModel\obj\Debug\STAADModel.csproj.ResolveComReference.cache
 C:\Users\RISE123\Documents\GitHub\STAADModel\obj\Debug\STAADModel.dll
