@@ -1,0 +1,10 @@
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\bin\Debug\STAADParameterGeneratorCMD.exe.config
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\bin\Debug\STAADParameterGeneratorCMD.exe
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\bin\Debug\STAADParameterGeneratorCMD.pdb
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\bin\Debug\STAADModel.dll
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\bin\Debug\STAADModel.pdb
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.csprojResolveAssemblyReference.cache
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\Interop.OpenSTAADUI.dll
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.csproj.ResolveComReference.cache
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.exe
+C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.pdb

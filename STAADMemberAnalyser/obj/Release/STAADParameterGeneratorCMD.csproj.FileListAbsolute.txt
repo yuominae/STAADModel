@@ -1,0 +1,15 @@
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\bin\Release\STAADParameterGeneratorCMD.exe.config
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\Interop.OpenSTAADUI.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\STAADParameterGeneratorCMD.csproj.ResolveComReference.cache
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\STAADParameterGeneratorCMD.exe
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\STAADParameterGeneratorCMD.pdb
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\bin\Release\STAADParameterGeneratorCMD.exe
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\bin\Release\STAADParameterGeneratorCMD.pdb
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\bin\Release\STAADModel.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\bin\Release\STAADModel.pdb
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150722_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\STAADParameterGeneratorCMD.csprojResolveAssemblyReference.cache
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150730_1_STAADMemberAnalyser\STAADMemberAnalyser\bin\Release\STAADParameterGeneratorCMD.exe.config
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150730_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\Interop.OpenSTAADUI.dll
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150730_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\STAADParameterGeneratorCMD.csproj.ResolveComReference.cache
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150730_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\STAADParameterGeneratorCMD.exe
+C:\Users\RISE123\Documents\Visual Studio 2013\Projects\STAADMemberAnalyser_Version\20150730_1_STAADMemberAnalyser\STAADMemberAnalyser\obj\Release\STAADParameterGeneratorCMD.pdb
