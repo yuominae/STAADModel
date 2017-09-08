@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace STAADModel
 {
@@ -93,7 +90,7 @@ namespace STAADModel
             // Process truss members and beams which are pinned at both ends - If truss members won't be processed they are removed from the nodes as they are not needed for member generation
             if (this.Configuration.IgnoreTrussMembers && Beams.Any(o => o.Spec != BEAMSPEC.UNSPECIFIED))
             {
-                foreach (Beam beam in Beams.Where(b => new List<Node>(){ b.StartNode, b.EndNode }.SelectMany(n => n.ConnectedBeams).Any(cb => cb.Spec != BEAMSPEC.UNSPECIFIED)))
+                foreach (Beam beam in Beams.Where(b => new List<Node>() { b.StartNode, b.EndNode }.SelectMany(n => n.ConnectedBeams).Any(cb => cb.Spec != BEAMSPEC.UNSPECIFIED)))
                 {
                     beam.StartNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
                     beam.EndNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
@@ -150,7 +147,7 @@ namespace STAADModel
 
                 // Select the latest member if required
                 if (SelectIndividualMembersDuringCreation)
-                    this.StaadModel.Staad.Geometry.SelectMultipleBeams(newMember.Beams.Select(o => o.ID).ToArray());
+                    this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(newMember.Beams.Select(o => o.ID).ToArray());
             }
         }
 
@@ -195,7 +192,7 @@ namespace STAADModel
                     // Check if beta angle is continuous
                     if (this.Configuration.BreakAtBetaAngleChanges && Beam.BetaAngle != beam.BetaAngle)
                         break;
-                    
+
                     // Check beam releases
                     // If moving downstream, use the start release, else use the end release. Invert releases if necessary, depending on beam relative direction
                     BEAMRELATIVEDIRECTION beamDirection = Beam.DetermineBeamRelativeDirection(beam);
@@ -333,17 +330,18 @@ namespace STAADModel
                     member.Type = MEMBERTYPE.POST;
                 else
                     if (member.Beams.All(b => b.Spec != BEAMSPEC.UNSPECIFIED))
-                        member.Type = MEMBERTYPE.BRACE;
-                    else if (member.Beams.All(b => b.Spec == BEAMSPEC.UNSPECIFIED))
-                        member.Type = MEMBERTYPE.BEAM;
-                    else
-                        member.Type = MEMBERTYPE.OTHER;
+                    member.Type = MEMBERTYPE.BRACE;
+                else if (member.Beams.All(b => b.Spec == BEAMSPEC.UNSPECIFIED))
+                    member.Type = MEMBERTYPE.BEAM;
+                else
+                    member.Type = MEMBERTYPE.OTHER;
 
             // Fire status update event
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs(status, 1.0));
         }
 
         public event MemberGeneratorStatusUpdateEventDelegate StatusUpdate;
+
         private void OnStatusUpdate(MemberGeneratorStatusUpdateEventArgs e)
         {
             if (this.StatusUpdate != null)

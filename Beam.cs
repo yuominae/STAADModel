@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
-using System.Windows;
 
 namespace STAADModel
 {
@@ -23,7 +20,7 @@ namespace STAADModel
 
         public int ID { get; set; }
 
-        public double BetaAngle 
+        public double BetaAngle
         {
             get { return this._BetaAngle; }
             set
@@ -55,7 +52,7 @@ namespace STAADModel
 
         public bool IsParallelToX
         {
-            get {return this.DeltaY + this.DeltaZ <= 0.01; }
+            get { return this.DeltaY + this.DeltaZ <= 0.01; }
         }
 
         public bool IsParallelToY
@@ -73,7 +70,7 @@ namespace STAADModel
             get { return this.StartRelease.IsReleased || this.EndRelease.IsReleased; }
         }
 
-        public Node StartNode 
+        public Node StartNode
         {
             get { return this._StartNode; }
             private set
@@ -101,8 +98,8 @@ namespace STAADModel
 
         public HashSet<Beam> IncomingParallelBeams
         {
-            get 
-            { 
+            get
+            {
                 if (this._IncomingParallelBeams == null)
                     this._IncomingParallelBeams = new HashSet<Beam>(this.IncomingBeams.Where(b => this.DetermineBeamRelationship(b) == BEAMRELATION.PARALLEL));
                 return this._IncomingParallelBeams;
@@ -111,7 +108,7 @@ namespace STAADModel
 
         public HashSet<Beam> OutgoingParallelBeams
         {
-            get 
+            get
             {
                 if (this._OutgoingParallelBeams == null)
                     this._OutgoingParallelBeams = new HashSet<Beam>(this.OutgoingBeams.Where(b => this.DetermineBeamRelationship(b) == BEAMRELATION.PARALLEL));
@@ -131,8 +128,8 @@ namespace STAADModel
 
         public HashSet<Beam> OutgoingBeams
         {
-            get 
-            { 
+            get
+            {
                 if (this._OutgoingBeams == null)
                     this._OutgoingBeams = new HashSet<Beam>(this.EndNode.ConnectedBeams.Where(o => o != this).ToList());
                 return this._OutgoingBeams;
@@ -221,7 +218,7 @@ namespace STAADModel
                 else
                     if (s1.Width != s2.Width || s1.Depth != s2.Depth || s1.FlangeThinkness != s2.FlangeThinkness || s1.WebThickness != s2.WebThickness
                         || s1.Ax != s2.Ax || s1.Iy != s1.Iy || s1.Iz != s2.Iz)
-                        return false;
+                    return false;
             }
 
             // Check beam beta angle
@@ -296,9 +293,11 @@ namespace STAADModel
                 case BEAMAXIS.MAJOR:
                     angle = Vector3D.AngleBetween(this.MinorAxis, Vector3D.CrossProduct(this.LongitudinalAxis, Beam.LongitudinalAxis));
                     break;
+
                 case BEAMAXIS.MINOR:
-                    angle = Vector3D.AngleBetween(this.MajorAxis, Vector3D.CrossProduct(this.LongitudinalAxis, Beam.LongitudinalAxis));        
+                    angle = Vector3D.AngleBetween(this.MajorAxis, Vector3D.CrossProduct(this.LongitudinalAxis, Beam.LongitudinalAxis));
                     break;
+
                 default:
                     throw new NotImplementedException();
             }
@@ -322,9 +321,11 @@ namespace STAADModel
                 case BEAMAXIS.LONGITUDINAL:
                     output = Vector3D.AngleBetween(Beam1.LongitudinalAxis, Beam2.LongitudinalAxis);
                     break;
+
                 case BEAMAXIS.MAJOR:
                     output = Vector3D.AngleBetween(Beam1.MajorAxis, Beam2.LongitudinalAxis);
                     break;
+
                 case BEAMAXIS.MINOR:
                     output = Vector3D.AngleBetween(Beam1.MinorAxis, Beam2.LongitudinalAxis);
                     break;
@@ -418,7 +419,6 @@ namespace STAADModel
             // Apply the transformation
             this.MajorAxis = transformation.Transform(this.MajorAxis);
             this.MinorAxis = transformation.Transform(this.MinorAxis);
-
         }
     }
 }

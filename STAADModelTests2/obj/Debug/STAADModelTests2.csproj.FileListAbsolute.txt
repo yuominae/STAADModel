@@ -18,3 +18,14 @@ C:\Users\RISE123\Documents\GitHub\STAADModel\STAADModelTests2\bin\Debug\STAADMod
 C:\Users\RISE123\Documents\GitHub\STAADModel\STAADModelTests2\bin\Debug\STAADModel.dll
 C:\Users\RISE123\Documents\GitHub\STAADModel\STAADModelTests2\bin\Debug\STAADModel.pdb
 C:\Users\RISE123\Documents\GitHub\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.csprojResolveAssemblyReference.cache
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\bin\Debug\STAADModelTests2.exe.config
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\bin\Debug\STAADModelTests2.exe
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\bin\Debug\STAADModelTests2.pdb
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\bin\Debug\STAADModel.dll
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\bin\Debug\STAADModel.pdb
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.csprojResolveAssemblyReference.cache
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\obj\Debug\Interop.OpenSTAADUI.dll
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.csproj.ResolveComReference.cache
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.csproj.CoreCompileInputs.cache
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.exe
+C:\Users\u272206\Source\Repos\STAADModel\STAADModelTests2\obj\Debug\STAADModelTests2.pdb

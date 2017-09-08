@@ -70,7 +70,7 @@
     <Compile Include="OpenStaadGetter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SectionProperty.cs" />
-    <Compile Include="Staad.cs" />
+    <Compile Include="StaadModelWrapper.cs" />
     <Compile Include="Utilities\MemberHelpers.cs" />
   </ItemGroup>
   <ItemGroup>

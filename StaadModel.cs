@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using OpenSTAADUI;
@@ -16,8 +15,8 @@ namespace STAADModel
 
     public class StaadModel
     {
-        private string _FileName;
-        private object _lockObject;
+        string fileName;
+        object locker;
 
         /// <summary>
         /// The path to the .std file
@@ -26,13 +25,16 @@ namespace STAADModel
         {
             get
             {
-                if (string.IsNullOrEmpty(this._FileName))
+                if (string.IsNullOrEmpty(this.fileName))
                 {
                     dynamic fn = string.Empty;
-                    this.Staad.main.GetSTAADFile(ref fn, true);
-                    this._FileName = fn;
+
+                    this.StaadWrapper.StaadInstance.GetSTAADFile(ref fn, true);
+
+                    this.fileName = fn;
                 }
-                return this._FileName;
+
+                return this.fileName;
             }
         }
 
@@ -46,12 +48,12 @@ namespace STAADModel
 
         public bool HasResults
         {
-            get { return (bool)this.Staad.Output.AreResultsAvailable(); }
+            get { return (bool)this.StaadWrapper.Output.AreResultsAvailable(); }
         }
 
         public bool ZAxisUp
         {
-            get { return (bool)this.Staad.Geometry.IsZUp(); }
+            get { return (bool)this.StaadWrapper.Geometry.IsZUp(); }
         }
 
         public bool EnableParallelBuild { get; set; }
@@ -74,27 +76,27 @@ namespace STAADModel
 
         public STAADBASEUNITSYSTEM UnitSystem
         {
-            get { return (STAADBASEUNITSYSTEM)this.Staad.main.GetBaseUnit(); }
+            get { return (STAADBASEUNITSYSTEM)this.StaadWrapper.StaadInstance.GetBaseUnit(); }
         }
 
         public STAADFORCEINPUTUNIT ForceUnit
         {
-            get { return (STAADFORCEINPUTUNIT)this.Staad.main.GetInputUnitForForce(""); }
+            get { return (STAADFORCEINPUTUNIT)this.StaadWrapper.StaadInstance.GetInputUnitForForce(""); }
         }
 
         public STAADLENGTHINPUTUNIT LengthUnit
         {
-            get { return (STAADLENGTHINPUTUNIT)this.Staad.main.GetInputUnitForLength(""); }
+            get { return (STAADLENGTHINPUTUNIT)this.StaadWrapper.StaadInstance.GetInputUnitForLength(""); }
         }
 
-        public StaadWrapper Staad { get; private set; }
+        public StaadModelWrapper StaadWrapper { get; private set; }
 
         public IMemberGenerator MemberGenerator { get; set; }
 
         public StaadModel()
         {
             this.InialiseModel();
-            this.Staad = new StaadWrapper(OpenStaadGetter.InstantiateOpenSTAAD());
+            this.StaadWrapper = new StaadModelWrapper(OpenStaadGetter.InstantiateOpenSTAAD());
         }
 
         public StaadModel(string ModelPath)
@@ -105,26 +107,33 @@ namespace STAADModel
         public StaadModel(OpenSTAAD Staad)
         {
             this.InialiseModel();
-            this.Staad = new StaadWrapper(Staad);
+            this.StaadWrapper = new StaadModelWrapper(Staad);
         }
 
         /// <summary>
-        /// Build a virtuak of the model replicating the one accessed via OpenStaad
+        /// Build a virtual model replicating the one accessed via OpenStaad
         /// </summary>
         public void Build()
         {
             // Get nodes <-- NODES MUST BE INITIALISED BEFORE BEAMS
             this.BuildNodes();
+
             // Get supports
             this.BuildSupports();
+
             // Get beams
             this.BuildBeams();
+
             // Get properties
             this.BuildSectionProperties();
+
             // Get Materials
             this.BuildMaterials();
+
             //Get primary load cases
+
             this.BuildLoadCases();
+
             // Get load combinations
             this.BuildLoadCombinations();
 
@@ -147,7 +156,9 @@ namespace STAADModel
             IEnumerable<int> allLoadCaseIDs;
 
             if (!this.LoadCases.Any() && !this.LoadCombinations.Any())
+            {
                 return null;
+            }
 
             allLoadCaseIDs = this.LoadCases.Cast<ILoadCase>().Union(this.LoadCombinations.Cast<ILoadCase>()).Select(lc => lc.ID);
             startLoadCase = allLoadCaseIDs.Min();
@@ -164,35 +175,38 @@ namespace STAADModel
         public IEnumerable<NodeDisplacements> GetDisplacements(IEnumerable<Node> Nodes, int StartLoadCase, int EndLoadCase)
         {
             const string status = "Getting node displacements...";
-            int count;
-            int totalCount;
-            IEnumerable<ILoadCase> loadCases;
-            IEnumerable<Node> targetNodes;
-            ConcurrentBag<NodeDisplacements> nodeDisplacements;
 
             // Check if results are even available
             if (!this.HasResults)
+            {
                 return null;
+            }
 
             // Get node displacements
-            targetNodes = this.Nodes.Where(n => Nodes.Contains(n));
-            nodeDisplacements = new ConcurrentBag<NodeDisplacements>();
-            loadCases = this.LoadCases.Cast<ILoadCase>().Union(this.LoadCombinations.Cast<ILoadCase>()).Where(lc => lc.ID >= StartLoadCase && lc.ID <= EndLoadCase);
-            count = 0;
-            totalCount = targetNodes.Count() * loadCases.Count();
+            var targetNodes = this.Nodes.Where(n => Nodes.Contains(n)).ToList();
+
+            var loadCases = this.LoadCases.Cast<ILoadCase>().Union(this.LoadCombinations.Cast<ILoadCase>())
+                .Where(lc => lc.ID >= StartLoadCase && lc.ID <= EndLoadCase)
+                .ToList();
+
+            int count = 0;
+            int totalCount = targetNodes.Count() * loadCases.Count();
+            var nodeDisplacements = new ConcurrentBag<NodeDisplacements>();
             Parallel.ForEach(targetNodes, (node) =>
             {
-                foreach (ILoadCase loadCase in loadCases)
+                foreach (var loadCase in loadCases)
                 {
                     nodeDisplacements.Add(this.GetNodeDisplacements(node, loadCase));
+
                     this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), totalCount));
                 }
             });
 
             // Add displacement results to nodes and load cases
-            foreach (NodeDisplacements nodeDisplacement in nodeDisplacements)
+            foreach (var nodeDisplacement in nodeDisplacements)
             {
                 nodeDisplacement.Node.Displacements.Add(nodeDisplacement);
+
                 nodeDisplacement.LoadCase.NodeDisplacements.Add(nodeDisplacement);
             }
 
@@ -206,18 +220,23 @@ namespace STAADModel
 
         public IEnumerable<BeamForces> GetEndForces(IEnumerable<Beam> Beams)
         {
-            int startLoadCase;
-            int endLoadCase;
-            IEnumerable<int> allLoadCaseIDs;
+            int startLoadCaseId;
+            int endLoadCaseId;
 
             if (!this.LoadCases.Any() && !this.LoadCombinations.Any())
+            {
                 return null;
+            }
 
-            allLoadCaseIDs = this.LoadCases.Cast<ILoadCase>().Union(this.LoadCombinations.Cast<ILoadCase>()).Select(lc => lc.ID);
-            startLoadCase = allLoadCaseIDs.Min();
-            endLoadCase = allLoadCaseIDs.Max();
+            var allLoadCaseIds = this.LoadCases.Cast<ILoadCase>().Union(this.LoadCombinations.Cast<ILoadCase>())
+                .Select(lc => lc.ID)
+                .ToList();
 
-            return this.GetEndForces(Beams, startLoadCase, endLoadCase);
+            startLoadCaseId = allLoadCaseIds.Min();
+
+            endLoadCaseId = allLoadCaseIds.Max();
+
+            return this.GetEndForces(Beams, startLoadCaseId, endLoadCaseId);
         }
 
         public IEnumerable<BeamForces> GetEndForces(int StartLoadCase, int EndLoadCase)
@@ -228,38 +247,45 @@ namespace STAADModel
         public IEnumerable<BeamForces> GetEndForces(IEnumerable<Beam> Beams, int StartLoadCase, int EndLoadCase)
         {
             const string status = "Getting beam end forces...";
-            int count;
-            int totalCount;
-            IEnumerable<Beam> targetBeams;
-            IEnumerable<ILoadCase> loadCases;
-            ConcurrentBag<BeamForces> beamForces;
 
             // Check if results are even available
             if (!this.HasResults)
+            {
                 return null;
+            }
 
             // Get node displacements
-            targetBeams = this.Beams.Where(b => Beams.Contains(b));
-            beamForces = new ConcurrentBag<BeamForces>();
-            loadCases = this.LoadCases.Cast<ILoadCase>().Union(this.LoadCombinations.Cast<ILoadCase>()).Where(lc => lc.ID >= StartLoadCase && lc.ID <= EndLoadCase);
-            count = 0;
-            totalCount = targetBeams.Count() * loadCases.Count();
+            var targetBeams = this.Beams.Where(b => Beams.Contains(b)).ToList();
+
+            var loadCases = this.LoadCases.Cast<ILoadCase>().Union(this.LoadCombinations.Cast<ILoadCase>())
+                .Where(lc => lc.ID >= StartLoadCase && lc.ID <= EndLoadCase)
+                .ToList();
+
+            int count = 0;
+            int totalCount = targetBeams.Count() * loadCases.Count();
+            var beamForces = new ConcurrentBag<BeamForces>();
             Parallel.ForEach(targetBeams, (beam) =>
             {
-                foreach (ILoadCase loadCase in loadCases)
+                foreach (var loadCase in loadCases)
                 {
                     this.GetBeamForces(beam, loadCase).ToList().ForEach(bf => beamForces.Add(bf));
+
                     this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), totalCount));
                 }
             });
 
             // Add displacement results to nodes and load cases
-            foreach (BeamForces beamForce in beamForces)
+            foreach (var beamForce in beamForces)
             {
                 if (beamForce.Node == beamForce.Beam.StartNode)
+                {
                     beamForce.Beam.StartForces.Add(beamForce);
+                }
                 else
+                {
                     beamForce.Beam.EndForces.Add(beamForce);
+                }
+
                 beamForce.LoadCase.BeamForces.Add(beamForce);
             }
 
@@ -300,10 +326,10 @@ namespace STAADModel
         /// <summary>
         /// Carry out common class initialisation tasks
         /// </summary>
-        private void InialiseModel()
+        void InialiseModel()
         {
             this.EnableParallelBuild = true;
-            this._lockObject = new object();
+            this.locker = new object();
             this.Nodes = new HashSet<Node>();
             this.Supports = new HashSet<Support>();
             this.Beams = new HashSet<Beam>();
@@ -315,38 +341,44 @@ namespace STAADModel
             this.MemberGenerator = new DefaultMemberGenerator(this);
         }
 
-        #region Model building methods
-
         /// <summary>
         /// Gather all node information from the model
         /// </summary>
-        private void BuildNodes()
+        void BuildNodes()
         {
-            string status;
-            int count;
-            dynamic ids;
+            // Get node ids
+            dynamic ids = new int[(int)this.StaadWrapper.Geometry.GetNodeCount()];
 
-            // Get Nodes
-            ids = new int[(int)this.Staad.Geometry.GetNodeCount()];
             if (((int[])ids).Length == 0)
+            {
                 throw new Exception("No nodes found in model");
-            this.Staad.Geometry.GetNodeList(ref ids);
-            //
-            // Initialise node objects. Use ConcurrentBag to avoid thread exceptions.
-            status = "Getting nodes...";
-            count = 0;
-            ConcurrentBag<Node> nodes = new ConcurrentBag<Node>();
+            }
+
+            this.StaadWrapper.Geometry.GetNodeList(ref ids);
+            
+            // Initialise node objects
+            string status = "Getting nodes...";
+
+            int count = 0;
+            var nodes = new ConcurrentBag<Node>();
             if (this.EnableParallelBuild)
-                Parallel.ForEach(((int[])ids), id => {
+            {
+                Parallel.ForEach((int[])ids, id =>
+                {
                     nodes.Add(this.GetNode(id));
+
                     this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), ids.Length));
                 });
+            }
             else
+            {
                 foreach (int id in (int[])ids)
                 {
                     nodes.Add(this.GetNode(id));
+
                     this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, ++count, ids.Length));
                 }
+            }
 
             this.Nodes = new HashSet<Node>(nodes.OrderBy(o => o.ID));
         }
@@ -354,7 +386,7 @@ namespace STAADModel
         /// <summary>
         /// Gather all support information from the model
         /// </summary>
-        private void BuildSupports()
+        void BuildSupports()
         {
             string status;
             int count;
@@ -362,17 +394,17 @@ namespace STAADModel
 
             //
             // Get support nodes
-            int supportCount = (int)this.Staad.Supports.GetSupportCount();
+            int supportCount = (int)this.StaadWrapper.Supports.GetSupportCount();
             if (supportCount > 0)
             {
                 ids = new int[supportCount];
-                this.Staad.Supports.GetSupportNodes(ref ids);
+                this.StaadWrapper.Supports.GetSupportNodes(ref ids);
                 status = "Assigning supports...";
                 count = 0;
                 foreach (Node node in this.Nodes.Where(n => ((int[])ids).Contains(n.ID)))
                 {
                     node.Support = this.GetSupport(node.ID);
-                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status,++count, ids.Length));
+                    this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, ++count, ids.Length));
                 }
             }
         }
@@ -380,22 +412,23 @@ namespace STAADModel
         /// <summary>
         /// Gather all beam information from the model
         /// </summary>
-        private void BuildBeams()
+        void BuildBeams()
         {
             string status;
             int count;
             dynamic ids;
 
             // Get beams
-            ids = new int[(int)this.Staad.Geometry.GetMemberCount()];
-            this.Staad.Geometry.GetBeamList(ref ids);
+            ids = new int[(int)this.StaadWrapper.Geometry.GetMemberCount()];
+            this.StaadWrapper.Geometry.GetBeamList(ref ids);
             //
             // Initialise beam objects. Use ConcurrentBag to avoid thread exceptions
             ConcurrentBag<Beam> beams = new ConcurrentBag<Beam>();
             status = "Getting beams...";
             count = 0;
             if (this.EnableParallelBuild)
-                Parallel.ForEach(((int[])ids), id => {
+                Parallel.ForEach(((int[])ids), id =>
+                {
                     beams.Add(this.GetBeam(id));
                     this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), ids.Length));
                 });
@@ -412,7 +445,7 @@ namespace STAADModel
         /// <summary>
         /// Gather all material information from the model
         /// </summary>
-        private void BuildMaterials()
+        void BuildMaterials()
         {
             string status;
 
@@ -422,7 +455,7 @@ namespace STAADModel
                 if (b.Material == null)
                 {
                     // Initialise a new material
-                    Material newMaterial = this.GetMaterial(this.Staad.Property.GetBeamMaterialName(b.ID).ToString());
+                    Material newMaterial = this.GetMaterial(this.StaadWrapper.Property.GetBeamMaterialName(b.ID).ToString());
                     this.Materials.Add(newMaterial);
 
                     // Break if all beams have been assigned a material
@@ -439,22 +472,23 @@ namespace STAADModel
         /// <summary>
         /// Gather all section property information from the model
         /// </summary>
-        private void BuildSectionProperties()
+        void BuildSectionProperties()
         {
             string status;
             int count;
             dynamic ids;
 
             // Get section properties and assign them to the beams
-            ids = new int[(int)this.Staad.Property.GetSectionPropertyCount()];
-            Staad.Property.GetSectionPropertyList(ref ids);
+            ids = new int[(int)this.StaadWrapper.Property.GetSectionPropertyCount()];
+            StaadWrapper.Property.GetSectionPropertyList(ref ids);
             //
             // Initialise section property objects and assign to beams. Use ConcurrentBag to avoid thread exceptions
             ConcurrentBag<SectionProperty> sectionProperties = new ConcurrentBag<SectionProperty>();
             count = 0;
             status = "Getting section properties...";
             if (this.EnableParallelBuild)
-                Parallel.ForEach(((int[])ids), id => {
+                Parallel.ForEach(((int[])ids), id =>
+                {
                     sectionProperties.Add(this.GetSectionProperty(id));
                     this.OnModelBuildStatusUpdate(new ModelBuildStatusUpdateEventArgs(status, Interlocked.Increment(ref count), ids.Length));
                 });
@@ -471,15 +505,15 @@ namespace STAADModel
         /// <summary>
         /// Gather all load case information from the model
         /// </summary>
-        private void BuildLoadCases()
+        void BuildLoadCases()
         {
             string status;
             int count;
             dynamic ids;
 
             // Get loads
-            ids = new int[(int)this.Staad.Load.GetPrimaryLoadCaseCount()];
-            this.Staad.Load.GetPrimaryLoadCaseNumbers(ref ids);
+            ids = new int[(int)this.StaadWrapper.Load.GetPrimaryLoadCaseCount()];
+            this.StaadWrapper.Load.GetPrimaryLoadCaseNumbers(ref ids);
             //
             // Initialise node objects. Use ConcurrentBag to avoid thread exceptions.
             status = "Getting load cases...";
@@ -504,15 +538,15 @@ namespace STAADModel
         /// <summary>
         /// Gather all load combination information from the model
         /// </summary>
-        private void BuildLoadCombinations()
+        void BuildLoadCombinations()
         {
             string status;
             int count;
             dynamic ids;
 
             // Get load combinations
-            ids = new int[(int)this.Staad.Load.GetLoadCombinationCaseCount()];
-            this.Staad.Load.GetLoadCombinationCaseNumbers(ref ids);
+            ids = new int[(int)this.StaadWrapper.Load.GetLoadCombinationCaseCount()];
+            this.StaadWrapper.Load.GetLoadCombinationCaseNumbers(ref ids);
             //
             // Initialise node objects. Use ConcurrentBag to avoid thread exceptions.
             status = "Getting load cases...";
@@ -542,7 +576,7 @@ namespace STAADModel
         /// <summary>
         /// Classify the beams in the model accordin to their specifications
         /// </summary>
-        private void ClassifyBeams()
+        void ClassifyBeams()
         {
             const string status = "Classifying beams...";
             int beamsProcessed;
@@ -585,12 +619,12 @@ namespace STAADModel
         /// </summary>
         /// <param name="NodeID">The ID of the new node to initialise</param>
         /// <returns></returns>
-        private Node GetNode(int NodeID)
+        Node GetNode(int NodeID)
         {
             dynamic x = 0.0;
             dynamic y = 0.0;
             dynamic z = 0.0;
-            Staad.Geometry.GetNodeCoordinates(NodeID, ref x, ref y, ref z);
+            StaadWrapper.Geometry.GetNodeCoordinates(NodeID, ref x, ref y, ref z);
 
             return new Node(NodeID, x, y, z);
         }
@@ -600,7 +634,7 @@ namespace STAADModel
         /// </summary>
         /// <param name="NodeID">The ID of the node at which the support applies</param>
         /// <returns></returns>
-        private Support GetSupport(int NodeID)
+        Support GetSupport(int NodeID)
         {
             Support newSupport;
             SUPPORTTYPE type;
@@ -610,7 +644,7 @@ namespace STAADModel
             dynamic springs = new double[6];
 
             // Get support information
-            this.Staad.Supports.GetSupportInformationEx(NodeID, ref supportID, ref supportType, ref releases, ref springs);
+            this.StaadWrapper.Supports.GetSupportInformationEx(NodeID, ref supportID, ref supportType, ref releases, ref springs);
 
             if (this.Supports.Any(s => s.ID == supportID))
                 return this.Supports.Single(s => s.ID == supportID);
@@ -644,7 +678,7 @@ namespace STAADModel
         /// </summary>
         /// <param name="BeamID">The ID of the beam to initialise</param>
         /// <returns></returns>
-        private Beam GetBeam(int BeamID)
+        Beam GetBeam(int BeamID)
         {
             Node node1;
             Node node2;
@@ -653,10 +687,9 @@ namespace STAADModel
             // Get the member's start and end nodes
             dynamic node1Number = 0;
             dynamic node2Number = 0;
-            this.Staad.Geometry.GetMemberIncidence(BeamID, ref node1Number, ref node2Number);
+            this.StaadWrapper.Geometry.GetMemberIncidence(BeamID, ref node1Number, ref node2Number);
             node1 = this.Nodes.Single(o => o.ID == node1Number);
             node2 = this.Nodes.Single(o => o.ID == node2Number);
-
 
             // Generate the member
             newMember = new Beam(BeamID, node1, node2)
@@ -668,31 +701,36 @@ namespace STAADModel
             // Set member specs
             // Releases
             dynamic specCode = 0;
-            this.Staad.Property.GetMemberSpecCode(BeamID, ref specCode);
+            this.StaadWrapper.Property.GetMemberSpecCode(BeamID, ref specCode);
             switch ((int)specCode)
             {
                 case 0:
                     newMember.Spec = BEAMSPEC.MEMBERTRUSS;
                     break;
+
                 case 1:
                     newMember.Spec = BEAMSPEC.TENSIONMEMBER;
                     break;
+
                 case 2:
                     newMember.Spec = BEAMSPEC.COMPRESSIONMEMBER;
                     break;
+
                 case 3:
                     newMember.Spec = BEAMSPEC.CABLE;
                     break;
+
                 case 4:
                     newMember.Spec = BEAMSPEC.JOIST;
                     break;
+
                 case -1:
                 default:
                     newMember.Spec = BEAMSPEC.UNSPECIFIED;
                     break;
             }
             // Beta angle
-            newMember.BetaAngle = Convert.ToDouble(this.Staad.Property.GetBetaAngle(BeamID));
+            newMember.BetaAngle = Convert.ToDouble(this.StaadWrapper.Property.GetBetaAngle(BeamID));
 
             return newMember;
         }
@@ -703,12 +741,12 @@ namespace STAADModel
         /// <param name="BeamID">The ID of the beam at which to initialise a release</param>
         /// <param name="End">The end of the beam at which to initialise the release</param>
         /// <returns></returns>
-        private Releases GetReleases(int BeamID, int End)
+        Releases GetReleases(int BeamID, int End)
         {
             dynamic releases = new int[6];
             dynamic springs = new double[6];
 
-            this.Staad.Property.GetMemberReleaseSpec(BeamID, End, ref releases, ref springs);
+            this.StaadWrapper.Property.GetMemberReleaseSpec(BeamID, End, ref releases, ref springs);
 
             return new Releases()
             {
@@ -726,7 +764,7 @@ namespace STAADModel
         /// </summary>
         /// <param name="MaterialName">The name of the material to initialise</param>
         /// <returns>The new material</returns>
-        private Material GetMaterial(string MaterialName)
+        Material GetMaterial(string MaterialName)
         {
             Material newMaterial;
 
@@ -737,7 +775,7 @@ namespace STAADModel
             dynamic density = 0.0;
             dynamic alpha = 0.0;
             dynamic damping = 0.0;
-            this.Staad.Property.GetMaterialProperty(newMaterial.Name, ref elasticity, ref poisson, ref density, ref alpha, ref damping);
+            this.StaadWrapper.Property.GetMaterialProperty(newMaterial.Name, ref elasticity, ref poisson, ref density, ref alpha, ref damping);
             newMaterial.Elasticity = elasticity;
             newMaterial.Poisson = poisson;
             newMaterial.Density = density;
@@ -745,8 +783,8 @@ namespace STAADModel
             newMaterial.Damping = damping;
 
             // assign the material to the correct beams
-            dynamic ids = new int[(int)this.Staad.Property.GetIsotropicMaterialAssignedBeamCount(newMaterial.Name)];
-            this.Staad.Property.GetIsotropicMaterialAssignedBeamList(newMaterial.Name, ref ids);
+            dynamic ids = new int[(int)this.StaadWrapper.Property.GetIsotropicMaterialAssignedBeamCount(newMaterial.Name)];
+            this.StaadWrapper.Property.GetIsotropicMaterialAssignedBeamList(newMaterial.Name, ref ids);
             this.Beams.Where(o => ((int[])ids).Contains(o.ID)).ToList().ForEach(o => o.Material = newMaterial);
 
             return newMaterial;
@@ -757,12 +795,12 @@ namespace STAADModel
         /// </summary>
         /// <param name="SectionPropertyID">The ID of the section property to initialise</param>
         /// <returns>The new setcion property</returns>
-        private SectionProperty GetSectionProperty(int SectionPropertyID)
+        SectionProperty GetSectionProperty(int SectionPropertyID)
         {
             SectionProperty newSectionProperty;
 
             dynamic name = "";
-            this.Staad.Property.GetSectionPropertyName(SectionPropertyID, ref name);
+            this.StaadWrapper.Property.GetSectionPropertyName(SectionPropertyID, ref name);
 
             newSectionProperty = new SectionProperty(SectionPropertyID, name);
 
@@ -776,7 +814,7 @@ namespace STAADModel
             dynamic iZ = 0.0;
             dynamic tw = 0.0;
             dynamic tf = 0.0;
-            this.Staad.Property.GetSectionPropertyValues(SectionPropertyID, ref width, ref depth, ref areaX, ref areaY, ref areaZ, ref iX, ref iY, ref iZ, ref tf, ref tw);
+            this.StaadWrapper.Property.GetSectionPropertyValues(SectionPropertyID, ref width, ref depth, ref areaX, ref areaY, ref areaZ, ref iX, ref iY, ref iZ, ref tf, ref tw);
             newSectionProperty.Width = (float)width;
             newSectionProperty.Depth = (float)depth;
             newSectionProperty.FlangeThinkness = (float)tf;
@@ -789,8 +827,8 @@ namespace STAADModel
             newSectionProperty.Iz = (float)iZ;
 
             // Assign property to beams
-            dynamic ids = new int[(int)this.Staad.Property.GetSectionPropertyAssignedBeamCount(newSectionProperty.ID)];
-            Staad.Property.GetSectionPropertyAssignedBeamList(newSectionProperty.ID, ref ids);
+            dynamic ids = new int[(int)this.StaadWrapper.Property.GetSectionPropertyAssignedBeamCount(newSectionProperty.ID)];
+            StaadWrapper.Property.GetSectionPropertyAssignedBeamList(newSectionProperty.ID, ref ids);
             this.Beams.Where(o => ((int[])ids).Contains(o.ID)).ToList().ForEach(o => o.SectionProperty = newSectionProperty);
 
             return newSectionProperty;
@@ -801,17 +839,17 @@ namespace STAADModel
         /// </summary>
         /// <param name="LoadCaseID">The ID of the load case to initialise</param>
         /// <returns></returns>
-        private LoadCase GetLoadCase(int LoadCaseID)
+        LoadCase GetLoadCase(int LoadCaseID)
         {
             string title;
             LOADCASETYPE type;
             LoadCase newLoadCase;
 
             // Set the title
-            title = this.Staad.Load.GetLoadCaseTitle(LoadCaseID).ToString();
+            title = this.StaadWrapper.Load.GetLoadCaseTitle(LoadCaseID).ToString();
 
             // Get the type of load
-            type = (LOADCASETYPE)this.Staad.Load.GetLoadType(LoadCaseID);
+            type = (LOADCASETYPE)this.StaadWrapper.Load.GetLoadType(LoadCaseID);
 
             newLoadCase = new LoadCase(LoadCaseID)
             {
@@ -827,7 +865,7 @@ namespace STAADModel
         /// </summary>
         /// <param name="LoadCombinationID">The ID of the load combination to initialise</param>
         /// <returns></returns>
-        private LoadCombination GetLoadCombination(int LoadCombinationID)
+        LoadCombination GetLoadCombination(int LoadCombinationID)
         {
             string title;
             int loadCasesCount;
@@ -836,13 +874,13 @@ namespace STAADModel
             dynamic loadCaseFactors;
 
             // Set the title
-            title = this.Staad.Load.GetLoadCaseTitle(LoadCombinationID).ToString();
+            title = this.StaadWrapper.Load.GetLoadCaseTitle(LoadCombinationID).ToString();
 
             //Get load cases
-            loadCasesCount = (int)this.Staad.Load.GetNoOfLoadAndFactorPairsForCombination(LoadCombinationID);
+            loadCasesCount = (int)this.StaadWrapper.Load.GetNoOfLoadAndFactorPairsForCombination(LoadCombinationID);
             loadCases = new int[loadCasesCount];
             loadCaseFactors = new double[loadCasesCount];
-            this.Staad.Load.GetLoadAndFactorForCombination(LoadCombinationID, ref loadCases, ref loadCaseFactors);
+            this.StaadWrapper.Load.GetLoadAndFactorForCombination(LoadCombinationID, ref loadCases, ref loadCaseFactors);
 
             newLoadCombination = new LoadCombination(LoadCombinationID);
             newLoadCombination.Title = title;
@@ -852,17 +890,13 @@ namespace STAADModel
             return newLoadCombination;
         }
 
-        #endregion Model building methods
-
-        #region Model result methods
-
-        private NodeDisplacements GetNodeDisplacements(Node Node, ILoadCase LoadCase)
+        NodeDisplacements GetNodeDisplacements(Node Node, ILoadCase LoadCase)
         {
             NodeDisplacements nodeDisplacements;
             dynamic displacements;
 
             displacements = new double[6];
-            this.Staad.Output.GetNodeDisplacements(Node.ID, LoadCase.ID, ref displacements);
+            this.StaadWrapper.Output.GetNodeDisplacements(Node.ID, LoadCase.ID, ref displacements);
 
             nodeDisplacements = new NodeDisplacements()
             {
@@ -879,49 +913,46 @@ namespace STAADModel
             return nodeDisplacements;
         }
 
-        private IEnumerable<BeamForces> GetBeamForces(Beam Beam, ILoadCase LoadCase)
+        IEnumerable<BeamForces> GetBeamForces(Beam Beam, ILoadCase LoadCase)
         {
             List<BeamForces> beamForces = new List<BeamForces>();
             dynamic forces = new double[6];
 
-
             for (int i = 0; i <= 1; i++)
             {
-                this.Staad.Output.GetMemberEndForces(Beam.ID, i, LoadCase.ID, ref forces, 0);
+                this.StaadWrapper.Output.GetMemberEndForces(Beam.ID, i, LoadCase.ID, ref forces, 0);
                 beamForces.Add(new BeamForces()
-                    {
-                        Fx = forces[0],
-                        Fy = forces[1],
-                        Fz = forces[2],
-                        Mx = forces[3],
-                        My = forces[4],
-                        Mz = forces[5],
-                        Node = i == 0 ? Beam.StartNode : Beam.EndNode,
-                        Beam = Beam,
-                        LoadCase = LoadCase
-                    });
+                {
+                    Fx = forces[0],
+                    Fy = forces[1],
+                    Fz = forces[2],
+                    Mx = forces[3],
+                    My = forces[4],
+                    Mz = forces[5],
+                    Node = i == 0 ? Beam.StartNode : Beam.EndNode,
+                    Beam = Beam,
+                    LoadCase = LoadCase
+                });
             }
 
             return beamForces;
         }
 
-        #endregion Model result methods
-
         public event ModelBuildStatusUpdateEventDelegate ModelBuildStatusUpdate;
-        private void OnModelBuildStatusUpdate(ModelBuildStatusUpdateEventArgs e)
+
+        public event ModelBuildCompleteEventDelegate ModelBuildComplete;
+
+        void OnModelBuildStatusUpdate(ModelBuildStatusUpdateEventArgs e)
         {
-            lock (this._lockObject)
+            lock (this.locker)
             {
-                if (this.ModelBuildStatusUpdate != null)
-                    this.ModelBuildStatusUpdate(this, e);
+                this.ModelBuildStatusUpdate?.Invoke(this, e);
             }
         }
 
-        public event ModelBuildCompleteEventDelegate ModelBuildComplete;
-        private void OnModelBuildComplete()
+        void OnModelBuildComplete()
         {
-            if (this.ModelBuildComplete != null)
-                this.ModelBuildComplete(this);
+            this.ModelBuildComplete?.Invoke(this);
         }
     }
 }

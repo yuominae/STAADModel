@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
 namespace STAADModel
@@ -14,7 +12,7 @@ namespace STAADModel
 
         public int ID { get; private set; }
 
-        public bool IsSupport 
+        public bool IsSupport
         {
             get { return this.Support != null; }
         }

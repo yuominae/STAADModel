@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace STAADModel
 {
@@ -74,6 +71,6 @@ namespace STAADModel
             return this.ID.GetHashCode();
         }
 
-        #endregion Equality
+        #endregion Equilaty
     }
 }

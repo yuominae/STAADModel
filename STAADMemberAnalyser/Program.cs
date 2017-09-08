@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using STAADModel;
-
-using System.Diagnostics;
 
 namespace STAADParameterGeneratorCMD
 {
@@ -86,10 +84,9 @@ namespace STAADParameterGeneratorCMD
             savePath = Path.Combine(Path.GetDirectoryName(staadModel.FileName), Path.GetFileNameWithoutExtension(staadModel.FileName) + "_PARAMETERS.txt");
             output = new StringBuilder();
 
-
             s.Reset();
             s.Start();
-           
+
             output.Append(GatherDeflectionLengths(staadModel));
             output.AppendLine(GatherBucklingLengths(staadModel));
 
@@ -120,7 +117,6 @@ namespace STAADParameterGeneratorCMD
 
             return true;
         }
-
 
         private static string GatherDeflectionLengths(StaadModel Model)
         {
@@ -165,8 +161,7 @@ namespace STAADParameterGeneratorCMD
             StringBuilder output = new StringBuilder();
             BucklingLengthGenerator blg;
             IEnumerable<BucklingLength> bls;
-            
-            
+
             blg = new BucklingLengthGenerator(staadModel);
 
             // LZ

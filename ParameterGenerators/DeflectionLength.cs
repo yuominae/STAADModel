@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace STAADModel
 {
@@ -11,7 +8,7 @@ namespace STAADModel
         /// <summary>
         /// The deflection length
         /// </summary>
-        public double Length 
+        public double Length
         {
             get { return this.Beams.Sum(b => b.Length); }
         }
@@ -45,10 +42,10 @@ namespace STAADModel
         /// <returns></returns>
         public string ToSTAADString()
         {
-            return string.Format("DJ1 {0} MEMB {2}\r\nDJ2 {1} MEMB {2}", new object[] 
-            { 
-                this.StartNode.ID, 
-                this.EndNode.ID, 
+            return string.Format("DJ1 {0} MEMB {2}\r\nDJ2 {1} MEMB {2}", new object[]
+            {
+                this.StartNode.ID,
+                this.EndNode.ID,
                 this.Beams.ToSTAADBeamListString()
             });
         }

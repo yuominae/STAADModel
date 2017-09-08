@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Media3D;
 
 namespace STAADModel
 {
@@ -75,7 +72,7 @@ namespace STAADModel
             get { return this.Beams.First().StartRelease; }
         }
 
-        public Releases EndRelease 
+        public Releases EndRelease
         {
             get { return this.Beams.Last().EndRelease; }
         }
@@ -88,10 +85,10 @@ namespace STAADModel
 
         public Node EndNode { get; private set; }
 
-        public List<Member> IncomingMembers 
+        public List<Member> IncomingMembers
         {
-            get 
-            { 
+            get
+            {
                 if (this._IncomingMembers == null)
                     this._IncomingMembers = this.StartNode.ConnectedBeams.Select(b => b.Member).Where(m => m != null && m != this).ToList();
                 return this._IncomingMembers;
@@ -100,8 +97,8 @@ namespace STAADModel
 
         public List<Member> OutgoingMembers
         {
-            get 
-            { 
+            get
+            {
                 if (this._OutgoingMembers == null)
                     this._OutgoingMembers = this.EndNode.ConnectedBeams.Select(b => b.Member).Where(m => m != null && m != this).ToList();
                 return this._OutgoingMembers;
@@ -157,8 +154,10 @@ namespace STAADModel
             {
                 case BEAMRELATION.PARALLEL:
                     return MEMBERRELATION.PARALLEL;
+
                 case BEAMRELATION.ORTHOGONAL:
                     return MEMBERRELATION.ORTHOGONAL;
+
                 case BEAMRELATION.OTHER:
                 default:
                     return MEMBERRELATION.OTHER;

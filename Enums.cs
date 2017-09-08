@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace STAADModel
+﻿namespace STAADModel
 {
     public enum STAADBASEUNITSYSTEM
     {
@@ -112,7 +106,7 @@ namespace STAADModel
         FIXEDBUT = 3
     }
 
-    #endregion Support enums
+    #endregion Suppport enums
 
     #region Load case enums
 

@@ -8,3 +8,14 @@ C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\Inter
 C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.csproj.ResolveComReference.cache
 C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.exe
 C:\Users\RISE123\Documents\GitHub\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.pdb
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\bin\Debug\STAADParameterGeneratorCMD.exe.config
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\bin\Debug\STAADParameterGeneratorCMD.exe
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\bin\Debug\STAADParameterGeneratorCMD.pdb
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\bin\Debug\STAADModel.dll
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\bin\Debug\STAADModel.pdb
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.csprojResolveAssemblyReference.cache
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\obj\Debug\Interop.OpenSTAADUI.dll
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.csproj.ResolveComReference.cache
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.csproj.CoreCompileInputs.cache
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.exe
+C:\Users\u272206\Source\Repos\STAADModel\STAADMemberAnalyser\obj\Debug\STAADParameterGeneratorCMD.pdb

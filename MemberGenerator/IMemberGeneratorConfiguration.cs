@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace STAADModel
 {
@@ -31,7 +27,7 @@ namespace STAADModel
         /// <summary>
         /// Whether or not to break members when the material changes
         /// </summary>
-        bool BreakAtMaterialChanges { get;  }
+        bool BreakAtMaterialChanges { get; }
 
         /// <summary>
         /// Whether or not members are broken when they cross larger members

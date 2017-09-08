@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace STAADModel
 {
@@ -19,7 +15,7 @@ namespace STAADModel
         public static List<Beam> CheckBeamDirections(StaadModel Model)
         {
             IEnumerable<Beam> beamsToCheck;
-            List<Beam> output= new List<Beam>();
+            List<Beam> output = new List<Beam>();
 
             beamsToCheck = Model.Beams;
 

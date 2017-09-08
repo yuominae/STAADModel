@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
 using STAADModel;
 
 namespace STAADModelTests2
@@ -67,7 +63,6 @@ namespace STAADModelTests2
             else
                 return;
 
-
             //BucklingLengthGenerator blg = new BucklingLengthGenerator(model) { SelectMembersDuringAnalysis = true };
 
             Console.WriteLine("Press any key to quit");
@@ -88,7 +83,7 @@ namespace STAADModelTests2
             {
                 userInput = Console.ReadKey().KeyChar;
                 if (char.IsDigit(userInput) && Enum.IsDefined(typeof(BEAMTYPE), int.Parse(userInput.ToString())))
-                    model.Staad.Geometry.SelectMultipleBeams(model.Beams.Where(b => b.Type == (BEAMTYPE)Enum.Parse(typeof(BEAMTYPE), userInput.ToString())).Select(b => b.ID).ToArray());
+                    model.StaadWrapper.Geometry.SelectMultipleBeams(model.Beams.Where(b => b.Type == (BEAMTYPE)Enum.Parse(typeof(BEAMTYPE), userInput.ToString())).Select(b => b.ID).ToArray());
                 else
                     break;
             };
@@ -108,7 +103,7 @@ namespace STAADModelTests2
             {
                 userInput = Console.ReadKey().KeyChar;
                 if (char.IsDigit(userInput) && Enum.IsDefined(typeof(MEMBERTYPE), int.Parse(userInput.ToString())))
-                    model.Staad.Geometry.SelectMultipleBeams(model.Members.Where(m => m.Type == (MEMBERTYPE)Enum.Parse(typeof(MEMBERTYPE), userInput.ToString())).SelectMany(m => m.Beams).Select(b => b.ID).ToArray());
+                    model.StaadWrapper.Geometry.SelectMultipleBeams(model.Members.Where(m => m.Type == (MEMBERTYPE)Enum.Parse(typeof(MEMBERTYPE), userInput.ToString())).SelectMany(m => m.Beams).Select(b => b.ID).ToArray());
                 else
                     break;
             };
