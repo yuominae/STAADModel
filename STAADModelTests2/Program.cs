@@ -32,7 +32,7 @@ namespace STAADModelTests2
                 Console.ReadKey();
                 return;
             }
-            model.ModelBuildStatusUpdate += model_ModelBuildStatusUpdate;
+            model.ModelBuildStatusUpdate += Model_ModelBuildStatusUpdate;
 
             st.Start();
             model.Build();
@@ -44,9 +44,13 @@ namespace STAADModelTests2
             Console.WriteLine("Press s to select beams by type, y to generate members, press any other key to quit...");
             userInput = Console.ReadKey().Key;
             if (userInput == ConsoleKey.S)
+            {
                 SelectBeamsByType();
+            }
             else if (userInput != ConsoleKey.Y)
+            {
                 return;
+            }
 
             Console.WriteLine();
             Console.WriteLine("Starting member generation...");
@@ -59,9 +63,13 @@ namespace STAADModelTests2
             Console.WriteLine("Press s to select members by type, press any other key to quit...");
             userInput = Console.ReadKey().Key;
             if (userInput == ConsoleKey.S)
+            {
                 SelectMembersByType();
+            }
             else
+            {
                 return;
+            }
 
             //BucklingLengthGenerator blg = new BucklingLengthGenerator(model) { SelectMembersDuringAnalysis = true };
 
@@ -74,18 +82,25 @@ namespace STAADModelTests2
             char userInput;
             int[] typeValues;
 
-            typeValues = (int[])Enum.GetValues(typeof(BEAMTYPE));
+            typeValues = (int[])Enum.GetValues(typeof(BeamType));
 
             Console.WriteLine("Select the type of beam to highlight in STAAD:");
             foreach (int typeValue in typeValues)
-                Console.WriteLine("{0}. {1}", typeValue, Enum.GetName(typeof(BEAMTYPE), typeValue));
+            {
+                Console.WriteLine("{0}. {1}", typeValue, Enum.GetName(typeof(BeamType), typeValue));
+            }
+
             while (true)
             {
                 userInput = Console.ReadKey().KeyChar;
-                if (char.IsDigit(userInput) && Enum.IsDefined(typeof(BEAMTYPE), int.Parse(userInput.ToString())))
-                    model.StaadWrapper.Geometry.SelectMultipleBeams(model.Beams.Where(b => b.Type == (BEAMTYPE)Enum.Parse(typeof(BEAMTYPE), userInput.ToString())).Select(b => b.ID).ToArray());
+                if (char.IsDigit(userInput) && Enum.IsDefined(typeof(BeamType), int.Parse(userInput.ToString())))
+                {
+                    model.StaadWrapper.Geometry.SelectMultipleBeams(model.Beams.Where(b => b.Type == (BeamType)Enum.Parse(typeof(BeamType), userInput.ToString())).Select(b => b.Id).ToArray());
+                }
                 else
+                {
                     break;
+                }
             };
         }
 
@@ -94,27 +109,37 @@ namespace STAADModelTests2
             char userInput;
             int[] typeValues;
 
-            typeValues = (int[])Enum.GetValues(typeof(MEMBERTYPE));
+            typeValues = (int[])Enum.GetValues(typeof(MemberType));
 
             Console.WriteLine("Select the type of beam to highlight in STAAD:");
             foreach (int typeValue in typeValues)
-                Console.WriteLine("{0}. {1}", typeValue, Enum.GetName(typeof(MEMBERTYPE), typeValue));
+            {
+                Console.WriteLine("{0}. {1}", typeValue, Enum.GetName(typeof(MemberType), typeValue));
+            }
+
             while (true)
             {
                 userInput = Console.ReadKey().KeyChar;
-                if (char.IsDigit(userInput) && Enum.IsDefined(typeof(MEMBERTYPE), int.Parse(userInput.ToString())))
-                    model.StaadWrapper.Geometry.SelectMultipleBeams(model.Members.Where(m => m.Type == (MEMBERTYPE)Enum.Parse(typeof(MEMBERTYPE), userInput.ToString())).SelectMany(m => m.Beams).Select(b => b.ID).ToArray());
+                if (char.IsDigit(userInput) && Enum.IsDefined(typeof(MemberType), int.Parse(userInput.ToString())))
+                {
+                    model.StaadWrapper.Geometry.SelectMultipleBeams(model.Members.Where(m => m.Type == (MemberType)Enum.Parse(typeof(MemberType), userInput.ToString())).SelectMany(m => m.Beams).Select(b => b.Id).ToArray());
+                }
                 else
+                {
                     break;
+                }
             };
         }
 
-        static void model_ModelBuildStatusUpdate(StaadModel sender, ModelBuildStatusUpdateEventArgs e)
+        static void Model_ModelBuildStatusUpdate(StaadModel sender, ModelBuildStatusUpdateEventArgs e)
         {
             if (string.IsNullOrEmpty(previouStatusMessage) || !previouStatusMessage.Equals(e.StatusMessage))
             {
                 if (!string.IsNullOrEmpty(previouStatusMessage))
+                {
                     Console.WriteLine();
+                }
+
                 Console.Write(e.StatusMessage);
                 previouStatusMessage = e.StatusMessage;
             }

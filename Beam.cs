@@ -6,48 +6,116 @@ using System.Windows.Media.Media3D;
 namespace STAADModel
 {
     [Serializable]
-    public partial class Beam
+    public class Beam
     {
-        double _BetaAngle;
-        private Node _StartNode;
-        private Node _EndNode;
-        private HashSet<Beam> _IncomingBeams;
-        private HashSet<Beam> _OutgoingBeams;
-        private HashSet<Beam> _IncomingParallelBeams;
-        private HashSet<Beam> _OutgoingParallelBeams;
-        private SectionProperty _SectionProperty;
-        private Material _Material;
+        double betaAngle;
+        Node startNode;
+        Node endNode;
+        HashSet<Beam> _IncomingBeams;
+        HashSet<Beam> _IncomingParallelBeams;
+        Material _Material;
+        HashSet<Beam> _OutgoingBeams;
+        HashSet<Beam> _OutgoingParallelBeams;
+        SectionProperty _SectionProperty;
 
-        public int ID { get; set; }
+        public Beam()
+        {
+            this.Spec = BeamSpec.Unspecified;
+            this.StartRelease = new Releases();
+            this.EndRelease = new Releases();
+            this.StartForces = new HashSet<BeamForces>();
+            this.EndForces = new HashSet<BeamForces>();
+        }
+
+        public Beam(int Number, Node StartNode, Node EndNode) 
+            : this()
+        {
+            this.Id = Number;
+            this.StartNode = StartNode;
+            this.EndNode = EndNode;
+            this.GenerateLocalAxes();
+        }
 
         public double BetaAngle
         {
-            get { return this._BetaAngle; }
+            get { return this.betaAngle; }
             set
             {
-                this.ApplyBetaAngleToAxes(this._BetaAngle, value);
-                this._BetaAngle = value;
+                this.ApplyBetaAngleToAxes(this.betaAngle, value);
+                this.betaAngle = value;
             }
-        }
-
-        public double Length
-        {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.x - this.StartNode.x, 2) + Math.Pow(this.EndNode.y - this.StartNode.y, 2) + Math.Pow(this.EndNode.z - this.StartNode.z, 2)); }
         }
 
         public double DeltaX
         {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.x - this.StartNode.x, 2)); }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.X - this.StartNode.X, 2)); }
         }
 
         public double DeltaY
         {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.y - this.StartNode.y, 2)); }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.Y - this.StartNode.Y, 2)); }
         }
 
         public double DeltaZ
         {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.z - this.StartNode.z, 2)); }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.Z - this.StartNode.Z, 2)); }
+        }
+
+        public HashSet<BeamForces> EndForces { get; set; }
+
+        public Node EndNode
+        {
+            get { return this.endNode; }
+            private set
+            {
+                this.endNode = value;
+                this.endNode.ConnectedBeams.Add(this);
+            }
+        }
+
+        public HashSet<NodeDisplacements> EndNodeDisplacements
+        {
+            get { return this.EndNode.Displacements; }
+        }
+
+        public Releases EndRelease { get; set; }
+
+        public bool HasMaterial
+        {
+            get { return this.Material != null; }
+        }
+
+        public bool HasReleases
+        {
+            get { return this.StartRelease.IsReleased || this.EndRelease.IsReleased; }
+        }
+
+        public int Id { get; set; }
+
+        public HashSet<Beam> IncomingBeams
+        {
+            get
+            {
+                if (this._IncomingBeams == null)
+                {
+                    this._IncomingBeams = new HashSet<Beam>(this.startNode.ConnectedBeams.Where(o => o != this));
+                }
+
+                return this._IncomingBeams;
+            }
+        }
+
+        public HashSet<Beam> IncomingParallelBeams
+        {
+            get
+            {
+                if (this._IncomingParallelBeams == null)
+                {
+                    this._IncomingParallelBeams = new HashSet<Beam>(this.IncomingBeams.Where(b => this.DetermineBeamRelationship(b) == BeamRelation.Parallel));
+                }
+
+                return this._IncomingParallelBeams;
+            }
         }
 
         public bool IsParallelToX
@@ -65,90 +133,14 @@ namespace STAADModel
             get { return this.DeltaX + this.DeltaY <= 0.01; }
         }
 
-        public bool HasReleases
+        public double Length
         {
-            get { return this.StartRelease.IsReleased || this.EndRelease.IsReleased; }
-        }
-
-        public Node StartNode
-        {
-            get { return this._StartNode; }
-            private set
-            {
-                this._StartNode = value;
-                this._StartNode.ConnectedBeams.Add(this);
-            }
-        }
-
-        public Node EndNode
-        {
-            get { return this._EndNode; }
-            private set
-            {
-                this._EndNode = value;
-                this._EndNode.ConnectedBeams.Add(this);
-            }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.X - this.StartNode.X, 2) + Math.Pow(this.EndNode.Y - this.StartNode.Y, 2) + Math.Pow(this.EndNode.Z - this.StartNode.Z, 2)); }
         }
 
         public Vector3D LongitudinalAxis { get; set; }
 
         public Vector3D MajorAxis { get; set; }
-
-        public Vector3D MinorAxis { get; set; }
-
-        public HashSet<Beam> IncomingParallelBeams
-        {
-            get
-            {
-                if (this._IncomingParallelBeams == null)
-                    this._IncomingParallelBeams = new HashSet<Beam>(this.IncomingBeams.Where(b => this.DetermineBeamRelationship(b) == BEAMRELATION.PARALLEL));
-                return this._IncomingParallelBeams;
-            }
-        }
-
-        public HashSet<Beam> OutgoingParallelBeams
-        {
-            get
-            {
-                if (this._OutgoingParallelBeams == null)
-                    this._OutgoingParallelBeams = new HashSet<Beam>(this.OutgoingBeams.Where(b => this.DetermineBeamRelationship(b) == BEAMRELATION.PARALLEL));
-                return this._OutgoingParallelBeams;
-            }
-        }
-
-        public HashSet<Beam> IncomingBeams
-        {
-            get
-            {
-                if (this._IncomingBeams == null)
-                    this._IncomingBeams = new HashSet<Beam>(this._StartNode.ConnectedBeams.Where(o => o != this));
-                return this._IncomingBeams;
-            }
-        }
-
-        public HashSet<Beam> OutgoingBeams
-        {
-            get
-            {
-                if (this._OutgoingBeams == null)
-                    this._OutgoingBeams = new HashSet<Beam>(this.EndNode.ConnectedBeams.Where(o => o != this).ToList());
-                return this._OutgoingBeams;
-            }
-        }
-
-        public Releases StartRelease { get; set; }
-
-        public Releases EndRelease { get; set; }
-
-        public SectionProperty SectionProperty
-        {
-            get { return this._SectionProperty; }
-            set
-            {
-                this._SectionProperty = value;
-                this._SectionProperty.Beams.Add(this);
-            }
-        }
 
         public Material Material
         {
@@ -160,41 +152,140 @@ namespace STAADModel
             }
         }
 
-        public BEAMSPEC Spec { get; set; }
-
-        public BEAMTYPE Type { get; set; }
-
         public Member Member { get; set; }
+
+        public Vector3D MinorAxis { get; set; }
+
+        public HashSet<Beam> OutgoingBeams
+        {
+            get
+            {
+                if (this._OutgoingBeams == null)
+                {
+                    this._OutgoingBeams = new HashSet<Beam>(this.EndNode.ConnectedBeams.Where(o => o != this).ToList());
+                }
+
+                return this._OutgoingBeams;
+            }
+        }
+
+        public HashSet<Beam> OutgoingParallelBeams
+        {
+            get
+            {
+                if (this._OutgoingParallelBeams == null)
+                {
+                    this._OutgoingParallelBeams = new HashSet<Beam>(this.OutgoingBeams.Where(b => this.DetermineBeamRelationship(b) == BeamRelation.Parallel));
+                }
+
+                return this._OutgoingParallelBeams;
+            }
+        }
+
+        public SectionProperty SectionProperty
+        {
+            get { return this._SectionProperty; }
+            set
+            {
+                this._SectionProperty = value;
+                this._SectionProperty.Beams.Add(this);
+            }
+        }
+
+        public BeamSpec Spec { get; set; }
+
+        public HashSet<BeamForces> StartForces { get; set; }
+
+        public Node StartNode
+        {
+            get { return this.startNode; }
+            private set
+            {
+                this.startNode = value;
+                this.startNode.ConnectedBeams.Add(this);
+            }
+        }
 
         public HashSet<NodeDisplacements> StartNodeDisplacements
         {
             get { return this.StartNode.Displacements; }
         }
 
-        public HashSet<NodeDisplacements> EndNodeDisplacements
+        public Releases StartRelease { get; set; }
+
+        public BeamType Type { get; set; }
+
+        public static bool operator !=(Beam a, Beam b)
         {
-            get { return this.EndNode.Displacements; }
+            return !(a == b);
         }
 
-        public HashSet<BeamForces> StartForces { get; set; }
-
-        public HashSet<BeamForces> EndForces { get; set; }
-
-        public Beam()
+        public static bool operator ==(Beam a, Beam b)
         {
-            this.Spec = BEAMSPEC.UNSPECIFIED;
-            this.StartRelease = new Releases();
-            this.EndRelease = new Releases();
-            this.StartForces = new HashSet<BeamForces>();
-            this.EndForces = new HashSet<BeamForces>();
+            if (object.ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            if ((object)a == null || (object)b == null)
+            {
+                return false;
+            }
+
+            return a.Id == b.Id;
         }
 
-        public Beam(int Number, Node StartNode, Node EndNode) : this()
+        /// <summary>
+        /// Get the angle between two beams
+        /// </summary>
+        /// <param name="beam2">The beam to which to determine the angle to</param>
+        /// <returns>The angle between this beam and the second beam</returns>
+        public static double GetAngle(Beam beam1, Beam beam2)
         {
-            this.ID = Number;
-            this.StartNode = StartNode;
-            this.EndNode = EndNode;
-            this.GenerateLocalAxes();
+            return GetAngleRelativeToBeamAxis(beam1, beam2, BeamAxis.Longitudinal);
+        }
+
+        public static double GetAngleRelativeToBeamAxis(Beam beam1, Beam beam2, BeamAxis axis)
+        {
+            double output = 0;
+
+            switch (axis)
+            {
+                case BeamAxis.Longitudinal:
+                    output = Vector3D.AngleBetween(beam1.LongitudinalAxis, beam2.LongitudinalAxis);
+                    break;
+
+                case BeamAxis.Major:
+                    output = Vector3D.AngleBetween(beam1.MajorAxis, beam2.LongitudinalAxis);
+                    break;
+
+                case BeamAxis.Minor:
+                    output = Vector3D.AngleBetween(beam1.MinorAxis, beam2.LongitudinalAxis);
+                    break;
+            }
+
+            return Math.Round(output, 6);
+        }
+
+        public bool CheckIBeamInAxisPlane(Beam beam, BeamAxis axis)
+        {
+            double angle;
+
+            switch (axis)
+            {
+                case BeamAxis.Major:
+                    angle = Vector3D.AngleBetween(this.MinorAxis, Vector3D.CrossProduct(this.LongitudinalAxis, beam.LongitudinalAxis));
+                    break;
+
+                case BeamAxis.Minor:
+                    angle = Vector3D.AngleBetween(this.MajorAxis, Vector3D.CrossProduct(this.LongitudinalAxis, beam.LongitudinalAxis));
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+
+            return Math.Round(angle, 3) % 180 == 0;
         }
 
         /// <summary>
@@ -206,24 +297,31 @@ namespace STAADModel
         {
             // Check material
             if (this.Material != Beam2.Material)
+            {
                 return false;
+            }
 
             // Check section property
             if (this.SectionProperty != Beam2.SectionProperty)
             {
-                SectionProperty s1 = this.SectionProperty;
-                SectionProperty s2 = Beam2.SectionProperty;
+                var s1 = this.SectionProperty;
+                var s2 = Beam2.SectionProperty;
                 if (!s1.Name.Equals(s2.Name))
+                {
                     return false;
-                else
-                    if (s1.Width != s2.Width || s1.Depth != s2.Depth || s1.FlangeThinkness != s2.FlangeThinkness || s1.WebThickness != s2.WebThickness
+                }
+                else if (s1.Width != s2.Width || s1.Depth != s2.Depth || s1.FlangeThinkness != s2.FlangeThinkness || s1.WebThickness != s2.WebThickness
                         || s1.Ax != s2.Ax || s1.Iy != s1.Iy || s1.Iz != s2.Iz)
+                {
                     return false;
+                }
             }
 
             // Check beam beta angle
             if (this.BetaAngle != Beam2.BetaAngle)
+            {
                 return false;
+            }
 
             return true;
         }
@@ -234,191 +332,129 @@ namespace STAADModel
         /// <param name="Beam1"></param>
         /// <param name="Beam2"></param>
         /// <returns></returns>
-        public BEAMRELATION DetermineBeamRelationship(Beam Beam2, double AngularTolerance = 0)
+        public BeamRelation DetermineBeamRelationship(Beam Beam2, double AngularTolerance = 0)
         {
             double angle;
-            BEAMRELATION output; ;
+            BeamRelation output; ;
 
             // Get angle between 0 and 90 degrees
             angle = Math.Abs((this.GetAngle(Beam2) + 90) % 180 - 90);
 
-            output = BEAMRELATION.OTHER;
+            output = BeamRelation.Other;
             if (angle <= AngularTolerance)
-                output = BEAMRELATION.PARALLEL;
+            {
+                output = BeamRelation.Parallel;
+            }
             else if (angle >= 90 - AngularTolerance)
-                output = BEAMRELATION.ORTHOGONAL;
+            {
+                output = BeamRelation.Orthogonal;
+            }
 
             return output;
         }
 
-        public BEAMRELATIVEDIRECTION DetermineBeamRelativeDirection(Beam Beam2, double AngularTolerance = 0)
+        public BeamRelativeDirection DetermineBeamRelativeDirection(Beam Beam2, double AngularTolerance = 0)
         {
             double angle = this.GetAngle(Beam2);
-            BEAMRELATIVEDIRECTION output = BEAMRELATIVEDIRECTION.OTHER;
+            var output = BeamRelativeDirection.OTHER;
 
             if (angle <= AngularTolerance || (angle >= 360 - AngularTolerance && angle <= 360 + AngularTolerance))
-                output = BEAMRELATIVEDIRECTION.CODIRECTIONAL;
+            {
+                output = BeamRelativeDirection.CODIRECTIONAL;
+            }
             else if (angle >= 180 - AngularTolerance && angle <= 180 + AngularTolerance)
-                output = BEAMRELATIVEDIRECTION.CONTRADIRECTIONAL;
+            {
+                output = BeamRelativeDirection.CONTRADIRECTIONAL;
+            }
 
             return output;
-        }
-
-        /// <summary>
-        /// Get the angle between this beam and the specified second beam
-        /// </summary>
-        /// <param name="Beam2">The beam to which to determine the angle to</param>
-        /// <returns>The angle between this beam and the second beam</returns>
-        public double GetAngle(Beam Beam2)
-        {
-            return GetAngleRelativeToBeamAxis(this, Beam2, BEAMAXIS.LONGITUDINAL);
-        }
-
-        /// <summary>
-        /// Get the angle between two beams
-        /// </summary>
-        /// <param name="Beam2">The beam to which to determine the angle to</param>
-        /// <returns>The angle between this beam and the second beam</returns>
-        public static double GetAngle(Beam Beam1, Beam Beam2)
-        {
-            return GetAngleRelativeToBeamAxis(Beam1, Beam2, BEAMAXIS.LONGITUDINAL);
-        }
-
-        public bool CheckIBeamInAxisPlane(Beam Beam, BEAMAXIS Axis)
-        {
-            double angle;
-
-            switch (Axis)
-            {
-                case BEAMAXIS.MAJOR:
-                    angle = Vector3D.AngleBetween(this.MinorAxis, Vector3D.CrossProduct(this.LongitudinalAxis, Beam.LongitudinalAxis));
-                    break;
-
-                case BEAMAXIS.MINOR:
-                    angle = Vector3D.AngleBetween(this.MajorAxis, Vector3D.CrossProduct(this.LongitudinalAxis, Beam.LongitudinalAxis));
-                    break;
-
-                default:
-                    throw new NotImplementedException();
-            }
-
-            var test = Math.Round(angle, 3) % 180;
-
-            return Math.Round(angle, 3) % 180 == 0;
-        }
-
-        public double GetAngleRelativeToBeamAxis(Beam Beam2, BEAMAXIS Axis)
-        {
-            return GetAngleRelativeToBeamAxis(this, Beam2, Axis);
-        }
-
-        public static double GetAngleRelativeToBeamAxis(Beam Beam1, Beam Beam2, BEAMAXIS Axis)
-        {
-            double output = 0;
-
-            switch (Axis)
-            {
-                case BEAMAXIS.LONGITUDINAL:
-                    output = Vector3D.AngleBetween(Beam1.LongitudinalAxis, Beam2.LongitudinalAxis);
-                    break;
-
-                case BEAMAXIS.MAJOR:
-                    output = Vector3D.AngleBetween(Beam1.MajorAxis, Beam2.LongitudinalAxis);
-                    break;
-
-                case BEAMAXIS.MINOR:
-                    output = Vector3D.AngleBetween(Beam1.MinorAxis, Beam2.LongitudinalAxis);
-                    break;
-            }
-
-            return Math.Round(output, 6);
         }
 
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            Beam m = obj as Beam;
+            var m = obj as Beam;
             if ((object)m == null)
+            {
                 return false;
+            }
 
-            return this.ID == m.ID;
+            return this.Id == m.Id;
         }
 
-        public bool Equals(Beam m)
+        /// <summary>
+        /// Get the angle between this beam and the specified second beam
+        /// </summary>
+        /// <param name="beam2">The beam to which to determine the angle to</param>
+        /// <returns>The angle between this beam and the second beam</returns>
+        public double GetAngle(Beam beam2)
         {
-            if ((object)m == null)
-                return false;
-
-            return this.ID == m.ID;
+            return GetAngleRelativeToBeamAxis(this, beam2, BeamAxis.Longitudinal);
         }
 
-        public static bool operator ==(Beam a, Beam b)
+        public double GetAngleRelativeToBeamAxis(Beam beam2, BeamAxis axis)
         {
-            if (Object.ReferenceEquals(a, b))
-                return true;
-
-            if (((object)a == null) || ((object)b == null))
-                return false;
-
-            return a.ID == b.ID;
-        }
-
-        public static bool operator !=(Beam a, Beam b)
-        {
-            return !(a == b);
+            return GetAngleRelativeToBeamAxis(this, beam2, axis);
         }
 
         public override int GetHashCode()
         {
-            return this.ID.GetHashCode();
+            return this.Id.GetHashCode();
         }
 
-        private void GenerateLocalAxes()
+        void ApplyBetaAngleToAxes(double oldAngle, double newAngle)
         {
-            double angle;
-            Vector3D globalX = new Vector3D(1.0, 0.0, 0.0);
-            Matrix3D transformation = Matrix3D.Identity;
-            Quaternion rotation = Quaternion.Identity;
+            double netAngle = newAngle - oldAngle;
+            if (netAngle == 0)
+            {
+                return;
+            }
 
+            // Compute the transformation
+            var betaAngleRotation = new Quaternion(this.LongitudinalAxis, netAngle);
+            betaAngleRotation.Normalize();
+
+            var transformation = Matrix3D.Identity;
+            transformation.Rotate(betaAngleRotation);
+
+            // Apply the transformation
+            this.MajorAxis = transformation.Transform(this.MajorAxis);
+            this.MinorAxis = transformation.Transform(this.MinorAxis);
+        }
+
+        void GenerateLocalAxes()
+        {
+            var globalX = new Vector3D(1.0, 0.0, 0.0);
+            
             // Get the beams orientation vector
-            this.LongitudinalAxis = new Vector3D(this.EndNode.x - this.StartNode.x, this.EndNode.y - this.StartNode.y, this.EndNode.z - this.StartNode.z);
+            this.LongitudinalAxis = new Vector3D(this.EndNode.X - this.StartNode.X, this.EndNode.Y - this.StartNode.Y, this.EndNode.Z - this.StartNode.Z);
 
             // Compute the transformation required to match the X axis
-            angle = Vector3D.AngleBetween(this.LongitudinalAxis, globalX);
+            double angle = Vector3D.AngleBetween(this.LongitudinalAxis, globalX);
+
+            var rotation = Quaternion.Identity;
             if (angle % 180 != 0)
+            {
                 rotation = new Quaternion(Vector3D.CrossProduct(globalX, this.LongitudinalAxis), angle);
+            }
             else
+            {
                 rotation = new Quaternion(new Vector3D(0.0, 1.0, 0.0), angle);
+            }
+
             rotation.Normalize();
+
+            var transformation = Matrix3D.Identity;
             transformation.Rotate(rotation);
 
             // Apply the transformation
             this.LongitudinalAxis = transformation.Transform(globalX);
             this.MajorAxis = transformation.Transform(new Vector3D(0.0, 0.0, 1.0));
             this.MinorAxis = transformation.Transform(new Vector3D(0.0, 1.0, 0.0));
-        }
-
-        private void ApplyBetaAngleToAxes(double OldAngle, double NewAngle)
-        {
-            double netAngle;
-            Matrix3D transformation = Matrix3D.Identity;
-            Quaternion betaAngleRotation = Quaternion.Identity;
-
-            netAngle = NewAngle - OldAngle;
-
-            if (netAngle == 0)
-                return;
-
-            // Compute the transformation
-            betaAngleRotation = new Quaternion(this.LongitudinalAxis, netAngle);
-            betaAngleRotation.Normalize();
-            transformation.Rotate(betaAngleRotation);
-
-            // Apply the transformation
-            this.MajorAxis = transformation.Transform(this.MajorAxis);
-            this.MinorAxis = transformation.Transform(this.MinorAxis);
         }
     }
 }

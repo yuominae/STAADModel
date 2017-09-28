@@ -42,11 +42,15 @@ namespace STAADModel
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            SectionProperty s = obj as SectionProperty;
+            var s = obj as SectionProperty;
             if ((object)s == null)
+            {
                 return false;
+            }
 
             return this.ID == s.ID;
         }
@@ -54,18 +58,24 @@ namespace STAADModel
         public bool Equals(SectionProperty s)
         {
             if ((object)s == null)
+            {
                 return false;
+            }
 
             return this.ID == s.ID;
         }
 
         public static bool operator ==(SectionProperty a, SectionProperty b)
         {
-            if (Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
+            {
                 return true;
+            }
 
-            if (((object)a == null) || ((object)b == null))
+            if ((object)a == null || (object)b == null)
+            {
                 return false;
+            }
 
             return a.ID == b.ID;
         }

@@ -17,7 +17,7 @@ namespace STAADModel
         /// <returns>A list containing the names of all running openSTAAD objects</returns>
         public static List<string> GetOpenStaadCandidates()
         {
-            return GetRunningOpenSTAADInstances().Keys.ToList();
+            return GetAllRunningOpenStaadInstances().Keys.ToList();
         }
 
         /// <summary>
@@ -27,42 +27,43 @@ namespace STAADModel
         /// <returns>An OpenSTAAD object instantiated from the specified model</returns>
         public static OpenSTAAD InstantiateOpenSTAAD(string staadFilename = "")
         {
-            Dictionary<string, OpenSTAAD> runningInstances = GetRunningOpenSTAADInstances();
+            var runningInstances = GetAllRunningOpenStaadInstances();
 
             if (!runningInstances.Any())
+            {
                 throw new STAADRunningInstanceNotFoundException();
+            }
 
-            if (string.IsNullOrEmpty(staadFilename))
-                return runningInstances.First().Value;
-            else
-                return runningInstances[staadFilename];
+            return string.IsNullOrEmpty(staadFilename) 
+                ? runningInstances.First().Value 
+                : runningInstances[staadFilename];
         }
 
         /// <summary>
         /// Get all running openSTAAD instances
         /// </summary>
         /// <returns>A dictionary containing all running openSTAAD instances</returns>
-        private static Dictionary<string, OpenSTAAD> GetRunningOpenSTAADInstances()
+        static Dictionary<string, OpenSTAAD> GetAllRunningOpenStaadInstances()
         {
-            string candidateName;
-            Dictionary<string, OpenSTAAD> staadInstances;
-            Hashtable runningObjects;
-            IDictionaryEnumerator rotEnumerator;
-            OpenSTAAD openSTAAD;
+            var runningObjectsTable = GetRunningObjectTable();
+            var runningObjectsTableEnumerator = runningObjectsTable.GetEnumerator();
 
-            staadInstances = new Dictionary<string, OpenSTAAD>();
-
-            runningObjects = GetRunningObjectTable();
-            rotEnumerator = runningObjects.GetEnumerator();
-
-            while (rotEnumerator.MoveNext())
+            var staadInstances = new Dictionary<string, OpenSTAAD>();
+            while (runningObjectsTableEnumerator.MoveNext())
             {
                 // check if its a valid STAAD file
-                candidateName = rotEnumerator.Key.ToString();
+                string candidateName = runningObjectsTableEnumerator.Key.ToString();
+
                 if (Path.GetExtension(candidateName).Equals(".std", StringComparison.InvariantCultureIgnoreCase))
+                {
                     // Check is the candidate is actually an OpenSTAAD instance
-                    if ((openSTAAD = Marshal.BindToMoniker(candidateName) as OpenSTAAD) != null)
-                        staadInstances.Add(candidateName, openSTAAD);
+                    var openStaad = Marshal.BindToMoniker(candidateName) as OpenSTAAD;
+
+                    if (openStaad != null)
+                    {
+                        staadInstances.Add(candidateName, openStaad);
+                    }
+                }
             }
 
             return staadInstances;
@@ -72,31 +73,24 @@ namespace STAADModel
         /// Retrieve the running object table
         /// </summary>
         /// <returns>A hashtable containing the running objects</returns>
-        private static Hashtable GetRunningObjectTable()
+        static Hashtable GetRunningObjectTable()
         {
-            Hashtable result;
-            IntPtr numFetched;
-            IRunningObjectTable runningObjectTable;
-            IEnumMoniker monikerEnumerator;
-            IMoniker[] monikers;
-            IBindCtx ctx;
+            var result = new Hashtable();
 
-            result = new Hashtable();
-            numFetched = new IntPtr();
-            monikers = new IMoniker[1];
-
-            GetRunningObjectTable(0, out runningObjectTable);
-            runningObjectTable.EnumRunning(out monikerEnumerator);
+            GetRunningObjectTable(0, out var runningObjectTable);
+            runningObjectTable.EnumRunning(out var monikerEnumerator);
             monikerEnumerator.Reset();
-            CreateBindCtx(0, out ctx);
 
+            CreateBindCtx(0, out var ctx);
+
+            var monikers = new IMoniker[1];
+            var numFetched = new IntPtr();
             while (monikerEnumerator.Next(1, monikers, numFetched) == 0)
             {
-                string displayName;
-                object comObject;
-                monikers[0].GetDisplayName(ctx, null, out displayName);
+                monikers[0].GetDisplayName(ctx, null, out string displayName);
 
-                runningObjectTable.GetObject(monikers[0], out comObject);
+                runningObjectTable.GetObject(monikers[0], out object comObject);
+
                 result[displayName] = comObject;
             }
 
@@ -104,9 +98,9 @@ namespace STAADModel
         }
 
         [DllImport("ole32.dll")]
-        private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable prot);
+        static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable runningObjectTable);
 
         [DllImport("ole32.dll")]
-        private static extern int CreateBindCtx(int reserved, out IBindCtx ppbc);
+        static extern int CreateBindCtx(int reserved, out IBindCtx bindContext);
     }
 }

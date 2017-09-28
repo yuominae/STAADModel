@@ -14,19 +14,24 @@ namespace STAADModel
         /// <returns>A list containing all beams which are not running positive with respect to global axes</returns>
         public static List<Beam> CheckBeamDirections(StaadModel Model)
         {
-            IEnumerable<Beam> beamsToCheck;
-            List<Beam> output = new List<Beam>();
+            var output = new List<Beam>();
 
-            beamsToCheck = Model.Beams;
+            var beamsToCheck = Model.Beams;
 
-            foreach (Beam b in beamsToCheck)
+            foreach (var b in beamsToCheck)
             {
-                if (b.IsParallelToX && b.EndNode.x - b.StartNode.x < 0)
+                if (b.IsParallelToX && b.EndNode.X - b.StartNode.X < 0)
+                {
                     output.Add(b);
-                else if (b.IsParallelToY && b.EndNode.y - b.StartNode.y < 0)
+                }
+                else if (b.IsParallelToY && b.EndNode.Y - b.StartNode.Y < 0)
+                {
                     output.Add(b);
-                else if (b.IsParallelToZ && b.EndNode.z - b.StartNode.z < 0)
+                }
+                else if (b.IsParallelToZ && b.EndNode.Z - b.StartNode.Z < 0)
+                {
                     output.Add(b);
+                }
             }
 
             return output;

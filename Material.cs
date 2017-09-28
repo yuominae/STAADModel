@@ -23,43 +23,54 @@ namespace STAADModel
         public Material(string Name)
         {
             this.Name = Name;
+
             this.Beams = new HashSet<Beam>();
         }
 
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            Material m = obj as Material;
-            if ((object)m == null)
+            var m = obj as Material;
+            if (m == null)
+            {
                 return false;
+            }
 
             return this.Name.Equals(m.Name, StringComparison.CurrentCultureIgnoreCase);
         }
 
         public bool Equals(Material m)
         {
-            if ((object)m == null)
+            if (m == null)
+            {
                 return false;
+            }
 
             return this.Name.Equals(m.Name, StringComparison.CurrentCultureIgnoreCase);
         }
 
         public static bool operator ==(Material a, Material b)
         {
-            if (Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
+            {
                 return true;
+            }
 
-            if (((object)a == null) || ((object)b == null))
+            if ((object)a == null || (object)b == null)
+            {
                 return false;
+            }
 
             return a.Name.Equals(b.Name, StringComparison.CurrentCultureIgnoreCase);
         }
 
         public static bool operator !=(Material a, Material b)
         {
-            return !(a == b);
+            return a != b;
         }
 
         public override int GetHashCode()

@@ -1,68 +1,71 @@
 ﻿namespace STAADModel
 {
-    public enum STAADBASEUNITSYSTEM
+    // Units
+
+    public enum StaadBaseUnitSystem
     {
-        IMPERIAL = 1,
-        METRIC = 2
+        Imperial = 1,
+        Metric = 2
     }
 
-    public enum STAADFORCEINPUTUNIT
+    public enum StaadForceInputUnit
     {
-        KILOPOUND = 0,
-        POUND = 1,
-        KILOGRAM = 2,
-        METRICTON = 3,
-        NEWTON = 4,
-        KILONEWTON = 5,
-        MEGANEWTON = 6,
-        DECANEWTON = 7
+        KiloPound = 0,
+        Pound = 1,
+        KiloGram = 2,
+        MetricTon = 3,
+        Newton = 4,
+        KiloNewton = 5,
+        MegaNewton = 6,
+        DecaNewton = 7
     }
 
-    public enum STAADLENGTHINPUTUNIT
+    public enum StaadLengthInputUnit
     {
-        INCH = 1,
-        FEET = 2,
-        CENTIMETER = 3,
-        METER = 4,
-        MILLIMETER = 5,
-        DECIMETER = 6,
-        KILOMETER = 7
+        Inch = 1,
+        Feet = 2,
+        CentiMeter = 3,
+        Meter = 4,
+        MilliMeter = 5,
+        DeciMeter = 6,
+        KiloMeter = 7
     }
 
-    #region Beam enums
 
-    public enum BEAMAXIS
+    // Beams
+
+    public enum BeamAxis
     {
-        LONGITUDINAL,
-        MAJOR,
-        MINOR
+        Longitudinal,
+        Major,
+        Minor
     }
 
-    public enum BEAMSPEC
+    public enum BeamSpec
     {
-        UNSPECIFIED,
-        MEMBERTRUSS,
-        TENSIONMEMBER,
-        COMPRESSIONMEMBER,
-        CABLE,
-        JOIST
+        Unspecified,
+        MemberTruss,
+        TensionMember,
+        CompressionMember,
+        Cable,
+        Joist
     }
 
-    public enum BEAMRELATION
+    public enum BeamRelation
     {
-        OTHER,
-        ORTHOGONAL,
-        PARALLEL
+        Other,
+        Orthogonal,
+        Parallel
     }
 
-    public enum BEAMRELATIVEDIRECTION
+    public enum BeamRelativeDirection
     {
         OTHER,
         CODIRECTIONAL,
         CONTRADIRECTIONAL
     }
 
-    public enum BEAMTYPE
+    public enum BeamType
     {
         UNKNOWN,
         COLUMN,
@@ -71,11 +74,10 @@
         BRACE
     }
 
-    #endregion Beam enums
 
-    #region Member enums
+    // Members
 
-    public enum MEMBERTYPE
+    public enum MemberType
     {
         OTHER,
         COLUMN,
@@ -84,21 +86,14 @@
         POST
     }
 
-    public enum MEMBERRELATION
+    public enum MemberRelation
     {
         OTHER,
         ORTHOGONAL,
         PARALLEL
     }
 
-    #endregion Member enums
-
-    #region Suppport enums
-
-    /// <summary>
-    /// Staad support type description. Numeric values correspond to OpenSTAADUI Support.getSupportType() return value
-    /// </summary>
-    public enum SUPPORTTYPE
+    public enum SupportType
     {
         UNSPECIFIED = 0,
         PINNED = 1,
@@ -106,36 +101,32 @@
         FIXEDBUT = 3
     }
 
-    #endregion Suppport enums
+    // Load cases
 
-    #region Load case enums
-
-    public enum LOADCASETYPE
+    public enum LoadCaseType
     {
-        DEAD = 0,
-        LIVE = 1,
-        ROOFLIVE = 2,
-        WIND = 3,
-        SEISMIC = 4,
-        SNOW = 5,
-        FLUIDS = 6,
-        SOIL = 7,
-        RAIN = 8,
-        PONDING = 9,
-        DUST = 10,
-        TRAFFIC = 11,
-        TEMP = 12,
-        IMPERFECTION = 13,
-        ACCIDENTAL = 14,
-        FLOOD = 15,
-        ICE = 16,
-        WINDICE = 17,
-        CRANEHOOK = 18,
-        MASS = 19,
-        GRAVITY = 20,
-        PUSH = 21,
-        NONE = 22
+        Dead = 0,
+        Live = 1,
+        RoofLive = 2,
+        Wind = 3,
+        Seismic = 4,
+        Snow = 5,
+        Fluids = 6,
+        Soil = 7,
+        Rain = 8,
+        Ponding = 9,
+        Dust = 10,
+        Traffic = 11,
+        Temp = 12,
+        Imperfection = 13,
+        Accidental = 14,
+        Flood = 15,
+        Ice = 16,
+        WindIce = 17,
+        CraneHook = 18,
+        Mass = 19,
+        Gravity = 20,
+        Push = 21,
+        None = 22
     }
-
-    #endregion Load case enums
 }

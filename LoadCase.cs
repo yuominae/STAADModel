@@ -5,25 +5,45 @@ namespace STAADModel
 {
     public class LoadCase : ILoadCase
     {
-        public string Title { get; set; }
+        public LoadCase(int ID)
+        {
+            this.Id = ID;
+            this.Type = LoadCaseType.None;
+            this.LoadCombinations = new HashSet<LoadCombination>();
+            this.NodeDisplacements = new HashSet<NodeDisplacements>();
+            this.BeamForces = new HashSet<BeamForces>();
+        }
 
-        public int ID { get; private set; }
+        public HashSet<BeamForces> BeamForces { get; set; }
+
+        public int Id { get; private set; }
 
         public HashSet<LoadCombination> LoadCombinations { get; set; }
 
         public HashSet<NodeDisplacements> NodeDisplacements { get; set; }
 
-        public HashSet<BeamForces> BeamForces { get; set; }
+        public string Title { get; set; }
 
-        public LOADCASETYPE Type { get; set; }
+        public LoadCaseType Type { get; set; }
 
-        public LoadCase(int ID)
+        public static bool operator !=(LoadCase a, LoadCase b)
         {
-            this.ID = ID;
-            this.Type = LOADCASETYPE.NONE;
-            this.LoadCombinations = new HashSet<LoadCombination>();
-            this.NodeDisplacements = new HashSet<NodeDisplacements>();
-            this.BeamForces = new HashSet<BeamForces>();
+            return !(a == b);
+        }
+
+        public static bool operator ==(LoadCase a, LoadCase b)
+        {
+            if (object.ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            if (((object)a == null) || ((object)b == null))
+            {
+                return false;
+            }
+
+            return a.Id == b.Id;
         }
 
         #region Equality
@@ -31,42 +51,32 @@ namespace STAADModel
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            LoadCase n = obj as LoadCase;
+            var n = obj as LoadCase;
             if ((object)n == null)
+            {
                 return false;
+            }
 
-            return this.ID == n.ID;
+            return this.Id == n.Id;
         }
 
         public bool Equals(LoadCase n)
         {
             if ((object)n == null)
+            {
                 return false;
+            }
 
-            return this.ID == n.ID;
-        }
-
-        public static bool operator ==(LoadCase a, LoadCase b)
-        {
-            if (Object.ReferenceEquals(a, b))
-                return true;
-
-            if (((object)a == null) || ((object)b == null))
-                return false;
-
-            return a.ID == b.ID;
-        }
-
-        public static bool operator !=(LoadCase a, LoadCase b)
-        {
-            return !(a == b);
+            return this.Id == n.Id;
         }
 
         public override int GetHashCode()
         {
-            return this.ID.GetHashCode();
+            return this.Id.GetHashCode();
         }
 
         #endregion Equality

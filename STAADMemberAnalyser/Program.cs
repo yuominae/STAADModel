@@ -19,7 +19,7 @@ namespace STAADParameterGeneratorCMD
             string savePath;
             StringBuilder output;
             List<Member> members;
-            Stopwatch s = new Stopwatch();
+            var s = new Stopwatch();
 
             // Get the first available OpenSTAADModel
             if (!GetSTAADModel())
@@ -34,9 +34,13 @@ namespace STAADParameterGeneratorCMD
             Console.WriteLine("Acquired model {0}", staadModel.ModelName);
             Console.WriteLine("Proceed with model build? y/n");
             if (Console.ReadKey().Key == ConsoleKey.N)
+            {
                 return;
+            }
             else
+            {
                 Console.WriteLine();
+            }
 
             // Start model build
             Console.WriteLine("Starting model build...");
@@ -52,14 +56,18 @@ namespace STAADParameterGeneratorCMD
             if (test.Any())
             {
                 Console.WriteLine("The following beams are going in the wrong direction:");
-                test.ForEach(o => Console.WriteLine(o.ID));
+                test.ForEach(o => Console.WriteLine(o.Id));
                 Console.WriteLine("Beams going in the wrong direction will make it more difficul to generate members and parameters accurately.");
                 Console.WriteLine("Do you want to continue anyway? y/n");
                 if (Console.ReadKey().Key == ConsoleKey.N)
+                {
                     return;
+                }
             }
             else
+            {
                 Console.WriteLine("All checks successfully completed...");
+            }
 
             // Generate members
             s.Reset();
@@ -76,9 +84,13 @@ namespace STAADParameterGeneratorCMD
             Console.WriteLine("Generated {0} members in {1:0.00}s.", new object[] { members.Count, s.Elapsed.TotalSeconds });
             Console.WriteLine("Proceed with parameter output? y/n");
             if (Console.ReadKey().Key == ConsoleKey.N)
+            {
                 return;
+            }
             else
+            {
                 Console.WriteLine();
+            }
 
             // Order Members and output parameters
             savePath = Path.Combine(Path.GetDirectoryName(staadModel.FileName), Path.GetFileNameWithoutExtension(staadModel.FileName) + "_PARAMETERS.txt");
@@ -91,8 +103,11 @@ namespace STAADParameterGeneratorCMD
             output.AppendLine(GatherBucklingLengths(staadModel));
 
             // Deflection paramaters
-            using (StreamWriter sw = new StreamWriter(savePath))
+            using (var sw = new StreamWriter(savePath))
+            {
                 sw.Write(output);
+            }
+
             s.Stop();
             Console.WriteLine("Parameter calculations completed in {0:0.00}s.", s.Elapsed.TotalSeconds);
             Console.WriteLine("Data output to {0}.", savePath);
@@ -111,8 +126,8 @@ namespace STAADParameterGeneratorCMD
                 return false;
             }
 
-            staadModel.ModelBuildStatusUpdate += staadModel_ModelBuildStatusUpdate;
-            staadModel.ModelBuildComplete += staadModel_ModelBuildComplete;
+            staadModel.ModelBuildStatusUpdate += StaadModel_ModelBuildStatusUpdate;
+            staadModel.ModelBuildComplete += StaadModel_ModelBuildComplete;
             staadModel.MemberGenerator.StatusUpdate += MemberGenerator_StatusUpdate;
 
             return true;
@@ -120,15 +135,15 @@ namespace STAADParameterGeneratorCMD
 
         private static string GatherDeflectionLengths(StaadModel Model)
         {
-            StringBuilder output = new StringBuilder();
+            var output = new StringBuilder();
             IEnumerable<DeflectionLength> verticalMembers;
             IEnumerable<DeflectionLength> horizontalMembers;
 
-            DeflectionLengthGenerator dlg = new DeflectionLengthGenerator(staadModel);
+            var dlg = new DeflectionLengthGenerator(staadModel);
 
             dlg.GenerateDeflectionLengths();
-            verticalMembers = dlg.DeflectionLengths.Where(dl => dl.Member.Type == MEMBERTYPE.COLUMN || dl.Member.Type == MEMBERTYPE.POST).OrderBy(dl => dl.StartNode.z).ThenBy(dl => dl.StartNode.x).ThenBy(dl => dl.StartNode.y);
-            horizontalMembers = dlg.DeflectionLengths.Except(verticalMembers).OrderBy(dl => dl.StartNode.y).ThenBy(dl => dl.StartNode.z).ThenBy(dl => dl.StartNode.x);
+            verticalMembers = dlg.DeflectionLengths.Where(dl => dl.Member.Type == MemberType.COLUMN || dl.Member.Type == MemberType.POST).OrderBy(dl => dl.StartNode.Z).ThenBy(dl => dl.StartNode.X).ThenBy(dl => dl.StartNode.Y);
+            horizontalMembers = dlg.DeflectionLengths.Except(verticalMembers).OrderBy(dl => dl.StartNode.Y).ThenBy(dl => dl.StartNode.Z).ThenBy(dl => dl.StartNode.X);
 
             output.AppendLine("***");
             output.AppendLine("*** DEFLECTION LENGTHS");
@@ -138,19 +153,23 @@ namespace STAADParameterGeneratorCMD
             output.AppendLine("***");
             output.AppendLine("*** COLUMNS & POSTS");
             output.AppendLine("***");
-            foreach (DeflectionLength dl in verticalMembers)
+            foreach (var dl in verticalMembers)
+            {
                 output.AppendLine(dl.ToSTAADString());
+            }
             // Output beams
             output.AppendLine("***");
             output.AppendLine("*** BEAMS & OTHERS");
             output.AppendLine("***");
-            foreach (IGrouping<double, DeflectionLength> deflectionLengthGroup in horizontalMembers.GroupBy(dl => dl.StartNode.y))
+            foreach (var deflectionLengthGroup in horizontalMembers.GroupBy(dl => dl.StartNode.Y))
             {
                 output.AppendLine("***");
                 output.AppendLine(string.Format("*** EL+{0:0.000}", deflectionLengthGroup.Key));
                 output.AppendLine("***");
-                foreach (DeflectionLength dl in deflectionLengthGroup)
+                foreach (var dl in deflectionLengthGroup)
+                {
                     output.AppendLine(dl.ToSTAADString());
+                }
             }
 
             return output.ToString();
@@ -158,7 +177,7 @@ namespace STAADParameterGeneratorCMD
 
         private static string GatherBucklingLengths(StaadModel Model)
         {
-            StringBuilder output = new StringBuilder();
+            var output = new StringBuilder();
             BucklingLengthGenerator blg;
             IEnumerable<BucklingLength> bls;
 
@@ -190,36 +209,41 @@ namespace STAADParameterGeneratorCMD
 
         private static string GatherBucklingLengthsCollection(IEnumerable<BucklingLength> BucklingLengths)
         {
-            StringBuilder output = new StringBuilder();
+            var output = new StringBuilder();
             IEnumerable<BucklingLength> verticalMembers;
             IEnumerable<BucklingLength> horizontalMembers;
 
-            verticalMembers = BucklingLengths.Where(bl => bl.Member.Type == MEMBERTYPE.COLUMN || bl.Member.Type == MEMBERTYPE.POST).OrderBy(bl => bl.Member.StartNode.z).ThenBy(bl => bl.Member.StartNode.x).ThenBy(bl => bl.Member.StartNode.y);
-            horizontalMembers = BucklingLengths.Except(verticalMembers).OrderBy(bl => bl.Member.StartNode.y).ThenBy(bl => bl.Member.StartNode.z).ThenBy(bl => bl.Member.StartNode.x);
+            verticalMembers = BucklingLengths.Where(bl => bl.Member.Type == MemberType.COLUMN || bl.Member.Type == MemberType.POST).OrderBy(bl => bl.Member.StartNode.Z).ThenBy(bl => bl.Member.StartNode.X).ThenBy(bl => bl.Member.StartNode.Y);
+            horizontalMembers = BucklingLengths.Except(verticalMembers).OrderBy(bl => bl.Member.StartNode.Y).ThenBy(bl => bl.Member.StartNode.Z).ThenBy(bl => bl.Member.StartNode.X);
 
             // Output Columns
             output.AppendLine("***");
             output.AppendLine("*** COLUMNS & POSTS");
             output.AppendLine("***");
-            foreach (BucklingLength bl in verticalMembers)
+            foreach (var bl in verticalMembers)
+            {
                 output.AppendLine(bl.ToSTAADString());
+            }
             // Output beams
             output.AppendLine("***");
             output.AppendLine("*** BEAMS & OTHERS");
             output.AppendLine("***");
-            foreach (IGrouping<double, BucklingLength> bucklingLengthGroup in horizontalMembers.GroupBy(bl => bl.Member.StartNode.y))
+            foreach (var bucklingLengthGroup in horizontalMembers.GroupBy(bl => bl.Member.StartNode.Y))
             {
                 output.AppendLine("***");
                 output.AppendLine(string.Format("*** EL+{0:0.000}", bucklingLengthGroup.Key));
                 output.AppendLine("***");
-                foreach (BucklingLength bl in bucklingLengthGroup)
+
+                foreach (var bl in bucklingLengthGroup)
+                {
                     output.AppendLine(bl.ToSTAADString());
+                }
             }
 
             return output.ToString();
         }
 
-        static void staadModel_ModelBuildStatusUpdate(StaadModel sender, ModelBuildStatusUpdateEventArgs e)
+        static void StaadModel_ModelBuildStatusUpdate(StaadModel sender, ModelBuildStatusUpdateEventArgs e)
         {
             if (string.IsNullOrEmpty(previousStatus) || !previousStatus.Equals(e.StatusMessage))
             {
@@ -228,7 +252,7 @@ namespace STAADParameterGeneratorCMD
             }
         }
 
-        static void staadModel_ModelBuildComplete(StaadModel sender)
+        static void StaadModel_ModelBuildComplete(StaadModel sender)
         {
             Console.WriteLine("Build completed");
         }

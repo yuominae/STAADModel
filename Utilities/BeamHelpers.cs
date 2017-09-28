@@ -12,29 +12,29 @@ namespace STAADModel
         /// <returns></returns>
         public static IEnumerable<Beam> GatherParallelBeams(Beam Beam, Node LastNode = null, bool MoveDownstream = false)
         {
-            Node currentNode;
-            Beam nextBeam;
-            IEnumerable<Beam> connectedParallelBeams;
-            HashSet<Beam> parallelBeams;
+            var parallelBeams = new HashSet<Beam>();
 
-            parallelBeams = new HashSet<Beam>();
             if (MoveDownstream)
+            {
                 parallelBeams.Add(Beam);
+            }
 
             // Determine which will be the next node depending on the beam orientation and direction of travel
-            currentNode = BeamHelpers.DetermineNextNode(Beam, LastNode, MoveDownstream);
+            var currentNode = DetermineNextNode(Beam, LastNode, MoveDownstream);
 
             // Check if the are any parallel beams among the connected beams and start gathering the beams depending on the direction of travel
-            connectedParallelBeams = currentNode.ConnectedBeams.Where(b => b != null && b != Beam && b.DetermineBeamRelationship(Beam) == BEAMRELATION.PARALLEL);
+            var connectedParallelBeams = currentNode.ConnectedBeams.Where(b => b != null && b != Beam && b.DetermineBeamRelationship(Beam) == BeamRelation.Parallel);
             if (connectedParallelBeams.Any())
             {
-                nextBeam = connectedParallelBeams.First();
+                var nextBeam = connectedParallelBeams.First();
                 parallelBeams.UnionWith(GatherParallelBeams(nextBeam, currentNode, MoveDownstream));
             }
             else
             {
                 if (!MoveDownstream)
+                {
                     parallelBeams.UnionWith(GatherParallelBeams(Beam, currentNode, true));
+                }
             }
 
             return parallelBeams;
@@ -56,13 +56,17 @@ namespace STAADModel
             {
                 currentNode = Beam.EndNode;
                 if (LastNode != null && LastNode == Beam.EndNode)
+                {
                     currentNode = Beam.StartNode;
+                }
             }
             else
             {
                 currentNode = Beam.StartNode;
                 if (LastNode != null && LastNode == Beam.StartNode)
+                {
                     currentNode = Beam.EndNode;
+                }
             }
 
             return currentNode;

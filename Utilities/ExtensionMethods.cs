@@ -13,9 +13,9 @@ namespace STAADModel
         /// </summary>
         public static T DeepClone<T>(this T a)
         {
-            using (MemoryStream stream = new MemoryStream())
+            using (var stream = new MemoryStream())
             {
-                BinaryFormatter formatter = new BinaryFormatter();
+                var formatter = new BinaryFormatter();
                 formatter.Serialize(stream, a);
                 stream.Position = 0;
                 return (T)formatter.Deserialize(stream);
@@ -29,17 +29,17 @@ namespace STAADModel
         /// <returns>A string representing the list of beams in STAAD format</returns>
         public static string ToSTAADBeamListString(this List<Beam> Beams)
         {
-            StringBuilder output = new StringBuilder();
-            int[] ids;
-            int skip;
+            var output = new StringBuilder();
 
-            ids = Beams.Select(b => b.ID).OrderBy(id => id).ToArray();
+            var ids = Beams.Select(b => b.Id).OrderBy(id => id).ToArray();
 
-            skip = 0;
+            int skip = 0;
             for (int i = 0; i < ids.Length; i++)
             {
                 if (i == 0)
+                {
                     output.Append(ids[i]);
+                }
                 else
                 {
                     if (ids[i] - ids[i - 1] == 1)
@@ -47,18 +47,26 @@ namespace STAADModel
                         if (i == ids.Length - 1)
                         {
                             if (skip > 0)
+                            {
                                 output.Append(" TO");
+                            }
+
                             output.Append(" " + ids[i]);
                         }
                         else
+                        {
                             skip++;
+                        }
                     }
                     else
                     {
                         if (skip > 0)
                         {
                             if (skip > 1)
+                            {
                                 output.Append(" TO");
+                            }
+
                             output.Append(" " + ids[i - 1]);
                             skip = 0;
                         }

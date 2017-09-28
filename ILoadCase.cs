@@ -6,7 +6,7 @@ namespace STAADModel
     {
         string Title { get; }
 
-        int ID { get; }
+        int Id { get; }
 
         HashSet<NodeDisplacements> NodeDisplacements { get; }
 

@@ -7,7 +7,7 @@ namespace STAADModel
     {
         public string Title { get; set; }
 
-        public int ID { get; private set; }
+        public int Id { get; private set; }
 
         public HashSet<LoadCase> LoadCases
         {
@@ -22,7 +22,7 @@ namespace STAADModel
 
         public LoadCombination(int ID)
         {
-            this.ID = ID;
+            this.Id = ID;
             this.LoadCaseAndFactorPairs = new Dictionary<LoadCase, double>();
             this.NodeDisplacements = new HashSet<NodeDisplacements>();
             this.BeamForces = new HashSet<BeamForces>();
@@ -33,32 +33,42 @@ namespace STAADModel
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            LoadCombination n = obj as LoadCombination;
+            var n = obj as LoadCombination;
             if ((object)n == null)
+            {
                 return false;
+            }
 
-            return this.ID == n.ID;
+            return this.Id == n.Id;
         }
 
         public bool Equals(LoadCombination n)
         {
             if ((object)n == null)
+            {
                 return false;
+            }
 
-            return this.ID == n.ID;
+            return this.Id == n.Id;
         }
 
         public static bool operator ==(LoadCombination a, LoadCombination b)
         {
-            if (Object.ReferenceEquals(a, b))
+            if (object.ReferenceEquals(a, b))
+            {
                 return true;
+            }
 
-            if (((object)a == null) || ((object)b == null))
+            if ((object)a == null || (object)b == null)
+            {
                 return false;
+            }
 
-            return a.ID == b.ID;
+            return a.Id == b.Id;
         }
 
         public static bool operator !=(LoadCombination a, LoadCombination b)
@@ -68,7 +78,7 @@ namespace STAADModel
 
         public override int GetHashCode()
         {
-            return this.ID.GetHashCode();
+            return this.Id.GetHashCode();
         }
 
         #endregion Equilaty

@@ -23,7 +23,10 @@ namespace STAADModel
             get
             {
                 if (this._PrimaryMembers == null)
+                {
                     this._PrimaryMembers = this.PrimaryBeams.Select(b => b.Member).Distinct();
+                }
+
                 return this._PrimaryMembers;
             }
         }
@@ -33,7 +36,10 @@ namespace STAADModel
             get
             {
                 if (this._SecondaryMembers == null)
+                {
                     this._SecondaryMembers = this.SecondaryBeams.Select(b => b.Member).Distinct();
+                }
+
                 return this._SecondaryMembers;
             }
         }
@@ -43,7 +49,10 @@ namespace STAADModel
             get
             {
                 if (this._TertiaryMembers == null)
+                {
                     this._TertiaryMembers = this.TertiaryBeams.Select(b => b.Member).Distinct();
+                }
+
                 return this._TertiaryMembers;
             }
         }
@@ -74,10 +83,12 @@ namespace STAADModel
 
         public IEnumerable<BucklingLength> GenerateBucklingLengthsLY()
         {
-            List<BucklingLength> bucklingLengths = new List<BucklingLength>();
+            var bucklingLengths = new List<BucklingLength>();
 
-            foreach (Member member in this.StaadModel.Members)
-                bucklingLengths.AddRange(this.CalculateMemberBucklingLengths(member, BEAMAXIS.MINOR));
+            foreach (var member in this.StaadModel.Members)
+            {
+                bucklingLengths.AddRange(this.CalculateMemberBucklingLengths(member, BeamAxis.Minor));
+            }
 
             bucklingLengths.ForEach(bl => bl.Type = BUCKLINGLENGTHTYPE.LY);
             return bucklingLengths;
@@ -88,8 +99,10 @@ namespace STAADModel
             List<BucklingLength> bucklingLengths;
 
             bucklingLengths = new List<BucklingLength>();
-            foreach (Member m in this.StaadModel.Members)
-                bucklingLengths.AddRange(this.CalculateMemberBucklingLengths(m, BEAMAXIS.MAJOR));
+            foreach (var m in this.StaadModel.Members)
+            {
+                bucklingLengths.AddRange(this.CalculateMemberBucklingLengths(m, BeamAxis.Major));
+            }
 
             bucklingLengths.ForEach(bl => bl.Type = BUCKLINGLENGTHTYPE.LZ);
             return bucklingLengths;
@@ -100,8 +113,10 @@ namespace STAADModel
             List<BucklingLength> bucklingLengths;
 
             bucklingLengths = new List<BucklingLength>();
-            foreach (Member m in this.StaadModel.Members)
+            foreach (var m in this.StaadModel.Members)
+            {
                 bucklingLengths.AddRange(this.CalculateMemberUnsupportedLength(m));
+            }
 
             bucklingLengths.ForEach(bl => bl.Type = BUCKLINGLENGTHTYPE.UNL);
             return bucklingLengths;
@@ -122,7 +137,9 @@ namespace STAADModel
             // Remove processed members from members to process
             membersToProcess = membersToProcess.Except(this.PrimaryBeams.Select(b => b.Member));
             if (this.SelectMembersDuringAnalysis)
-                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.PrimaryBeams.Select(b => b.ID).ToArray());
+            {
+                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.PrimaryBeams.Select(b => b.Id).ToArray());
+            }
 
             // Identify secondary structure
             secondaryStructure = this.GetSecondarySupportStructure(membersToProcess).ToList();
@@ -130,20 +147,26 @@ namespace STAADModel
             // Remove processed members from members to process
             membersToProcess = membersToProcess.Except(this.SecondaryBeams.Select(b => b.Member));
             if (this.SelectMembersDuringAnalysis)
-                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.SecondaryBeams.Select(b => b.ID).ToArray());
+            {
+                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.SecondaryBeams.Select(b => b.Id).ToArray());
+            }
 
             // Remaining members form tertiatry structure
             this.TertiaryBeams = membersToProcess.SelectMany(m => m.Beams).Distinct();
             if (this.SelectMembersDuringAnalysis)
-                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.TertiaryBeams.Select(b => b.ID).ToArray());
+            {
+                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.TertiaryBeams.Select(b => b.Id).ToArray());
+            }
 
             // Identify braces which form part of the stability structure
-            this.StabilityBraces = this.GetStabilityBraces(this.StaadModel.Beams.Where(b => b.Spec == BEAMSPEC.MEMBERTRUSS));
+            this.StabilityBraces = this.GetStabilityBraces(this.StaadModel.Beams.Where(b => b.Spec == BeamSpec.MemberTruss));
             if (this.SelectMembersDuringAnalysis)
-                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.StabilityBraces.Select(b => b.ID).ToArray());
+            {
+                this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(this.StabilityBraces.Select(b => b.Id).ToArray());
+            }
         }
 
-        private IEnumerable<BucklingLength> CalculateMemberBucklingLengths(Member Member, BEAMAXIS Axis)
+        private IEnumerable<BucklingLength> CalculateMemberBucklingLengths(Member Member, BeamAxis Axis)
         {
             Node currentNode;
             BucklingLength currentBucklingLength;
@@ -156,36 +179,39 @@ namespace STAADModel
 
             currentNode = Member.StartNode;
             currentBucklingLength = new BucklingLength();
-            foreach (Beam beam in Member.Beams)
+            foreach (var beam in Member.Beams)
             {
                 currentBucklingLength.Beams.Add(beam);
                 // Determine the next node in case one of the beams is flipped
                 currentNode = (currentNode == beam.StartNode) ? beam.EndNode : beam.StartNode;
 
                 // Loop through connected beams to see if one of them is a stability brace
-                foreach (Beam connectedBeam in currentNode.ConnectedBeams.Where(b => !Member.Beams.Contains(b) && this.StabilityBraces.Contains(b)))
+                foreach (var connectedBeam in currentNode.ConnectedBeams.Where(b => !Member.Beams.Contains(b) && this.StabilityBraces.Contains(b)))
                 {
-                    double connectionAngle;
-                    bool memberInPlaneWithAxis;
-                    BEAMAXIS checkAxis;
-
                     // Check the connection plane and angle of the brace
-                    checkAxis = Axis == BEAMAXIS.MAJOR ? BEAMAXIS.MINOR : BEAMAXIS.MAJOR;
-                    memberInPlaneWithAxis = beam.CheckIBeamInAxisPlane(connectedBeam, checkAxis);
-                    connectionAngle = Math.Abs((beam.GetAngleRelativeToBeamAxis(connectedBeam, checkAxis) + 90) % 180 - 90);
+                    var checkAxis = Axis == BeamAxis.Major ? BeamAxis.Minor : BeamAxis.Major;
+                    bool memberInPlaneWithAxis = beam.CheckIBeamInAxisPlane(connectedBeam, checkAxis);
+                    double connectionAngle = Math.Abs((beam.GetAngleRelativeToBeamAxis(connectedBeam, checkAxis) + 90) % 180 - 90);
 
                     // Split the member if the brace connects in the correct place or within 45 of that plane
                     if (memberInPlaneWithAxis || (!memberInPlaneWithAxis && connectionAngle <= 45))
                     {
                         if (currentBucklingLength.Beams.Count > 1)
+                        {
                             bucklingLengths.Add(currentBucklingLength);
+                        }
+
                         currentBucklingLength = new BucklingLength();
+
                         break;
                     }
                 }
             }
+
             if (currentBucklingLength.Beams.Count > 1)
+            {
                 bucklingLengths.Add(currentBucklingLength);
+            }
 
             bucklingLengths.ForEach(bl => bl.Member = Member);
 
@@ -205,31 +231,37 @@ namespace STAADModel
 
             currentNode = Member.StartNode;
             currentBucklingLength = new BucklingLength();
-            foreach (Beam beam in Member.Beams)
+            foreach (var beam in Member.Beams)
             {
                 currentBucklingLength.Beams.Add(beam);
                 currentNode = (currentNode == beam.StartNode) ? beam.EndNode : beam.StartNode;
 
-                foreach (Beam connectedBeam in currentNode.ConnectedBeams.Where(cb => !Member.Beams.Contains(cb) && cb.Spec != BEAMSPEC.MEMBERTRUSS))
+                foreach (var connectedBeam in currentNode.ConnectedBeams.Where(cb => !Member.Beams.Contains(cb) && cb.Spec != BeamSpec.MemberTruss))
                 {
-                    double connectionAngle;
-                    bool memberInPlaneWithAxis;
-
-                    memberInPlaneWithAxis = beam.CheckIBeamInAxisPlane(connectedBeam, BEAMAXIS.MAJOR);
-                    connectionAngle = Math.Abs((beam.GetAngleRelativeToBeamAxis(connectedBeam, BEAMAXIS.MAJOR) + 90) % 180 - 90);
+                    bool memberInPlaneWithAxis = beam.CheckIBeamInAxisPlane(connectedBeam, BeamAxis.Major);
+                    double connectionAngle = Math.Abs((beam.GetAngleRelativeToBeamAxis(connectedBeam, BeamAxis.Major) + 90) % 180 - 90);
 
                     if (memberInPlaneWithAxis || (!memberInPlaneWithAxis && connectionAngle <= 45))
+                    {
                         if (CheckMemberRestraint(Member, connectedBeam, memberClass))
                         {
                             if (currentBucklingLength.Beams.Count > 1)
+                            {
                                 bucklingLengths.Add(currentBucklingLength);
+                            }
+
                             currentBucklingLength = new BucklingLength();
+
                             break;
                         }
+                    }
                 }
             }
+
             if (currentBucklingLength.Beams.Count > 1)
+            {
                 bucklingLengths.Add(currentBucklingLength);
+            }
 
             bucklingLengths.ForEach(bl => bl.Member = Member);
             return bucklingLengths;
@@ -250,27 +282,28 @@ namespace STAADModel
             processedMembers = new HashSet<Member>();
 
             // Identify primary structure: All members spanning directly between columns
-            columns = Members.Where(m => m.Type == MEMBERTYPE.COLUMN);
-            foreach (Member column in columns)
+            columns = Members.Where(m => m.Type == MemberType.COLUMN);
+            foreach (var column in columns)
             {
                 primaryStructure.UnionWith(column.Beams);
                 processedMembers.Add(column);
-                foreach (Member connectedMember in column.ConnectedMembers.Except(processedMembers))
+                foreach (var connectedMember in column.ConnectedMembers.Except(processedMembers))
                 {
                     int columnCount;
                     IEnumerable<Member> parallelMembers;
                     IEnumerable<Member> spanningMembers;
 
                     parallelMembers = MemberHelpers.GatherParallelMembers(connectedMember);
-                    var test = true;
-                    if (parallelMembers.SelectMany(m => m.Beams).Select(b => b.ID).Contains(3574))
-                        test = !test;
+
                     spanningMembers = GatherMembersBetweenColumns(connectedMember, parallelMembers);
 
-                    columnCount = spanningMembers.SelectMany(m => m.Nodes).Distinct().Count(n => n.ConnectedMembers.Any(m => m.Type == MEMBERTYPE.COLUMN));
+                    columnCount = spanningMembers.SelectMany(m => m.Nodes).Distinct().Count(n => n.ConnectedMembers.Any(m => m.Type == MemberType.COLUMN));
 
                     if (columnCount >= 2)
+                    {
                         primaryStructure.UnionWith(spanningMembers.SelectMany(m => m.Beams));
+                    }
+
                     processedMembers.UnionWith(spanningMembers);
                 }
             }
@@ -288,7 +321,7 @@ namespace STAADModel
             HashSet<Beam> secondaryStructure;
 
             secondaryStructure = new HashSet<Beam>();
-            foreach (Member member in Members.Where(m => this.PrimaryMembers.SelectMany(pm => pm.ConnectedMembers).Contains(m)))
+            foreach (var member in Members.Where(m => this.PrimaryMembers.SelectMany(pm => pm.ConnectedMembers).Contains(m)))
             {
                 int primaryCount;
                 IEnumerable<Member> parallelMembers;
@@ -298,7 +331,9 @@ namespace STAADModel
                 spanningMembers = this.GatherMembersBetweenPrimaryMembers(member, parallelMembers).ToList();
                 primaryCount = spanningMembers.SelectMany(m => m.Nodes).Distinct().Count(n => n.ConnectedBeams.Any(b => this.PrimaryBeams.Contains(b)));
                 if (primaryCount >= 2)
+                {
                     secondaryStructure.UnionWith(spanningMembers.SelectMany(m => m.Beams));
+                }
             }
 
             return secondaryStructure.ToList();
@@ -311,12 +346,15 @@ namespace STAADModel
         /// <returns>The list of beams identified as acting as stability braces</returns>
         private IEnumerable<Beam> GetStabilityBraces(IEnumerable<Beam> Beams)
         {
-            HashSet<Beam> stabilityBraces;
+            var stabilityBraces = new HashSet<Beam>();
 
-            stabilityBraces = new HashSet<Beam>();
-            foreach (Beam brace in Beams)
+            foreach (var brace in Beams)
+            {
                 if (!stabilityBraces.Contains(brace) && this.CheckBraceRestraint(brace))
+                {
                     stabilityBraces.Add(brace);
+                }
+            }
 
             return stabilityBraces;
         }
@@ -347,9 +385,13 @@ namespace STAADModel
             if (!endHere)
             {
                 if (!currentNode.ConnectedMembers.Intersect(ParallelMembers).Where(m => m != Member).Any())
+                {
                     nextMember = null;
+                }
                 else
+                {
                     nextMember = currentNode.ConnectedMembers.Intersect(ParallelMembers).First(m => m != Member);
+                }
             }
             endHere = nextMember == null;
 
@@ -358,25 +400,36 @@ namespace STAADModel
 
             // Check if the next Beam is released right after the current node
             if (!endHere)
+            {
                 endHere = currentNode == nextBeam.StartNode ? nextBeam.StartRelease.IsReleased : nextBeam.EndRelease.IsReleased;
+            }
 
             // Check if the member connects to a column
-            if (!endHere && currentNode.ConnectedMembers.Any(m => m.Type == MEMBERTYPE.COLUMN))
+            if (!endHere && currentNode.ConnectedMembers.Any(m => m.Type == MemberType.COLUMN))
+            {
                 if (nextBeam != null && nextBeam.SectionProperty != currentNode.ConnectedBeams.Intersect(Member.Beams).First().SectionProperty)
+                {
                     endHere = true;
+                }
+            }
 
             // Determine what to do depending on whether or not the chain stop here. if moving upstream, reverse and start gathering beams,
             // if moving upstream, return the chain.
             if (endHere)
             {
                 if (!MoveDownstream)
+                {
                     members.AddRange(this.GatherMembersBetweenColumns(Member, ParallelMembers, currentNode, true));
+                }
             }
             else
             {
-                IEnumerable<Member> output = this.GatherMembersBetweenColumns(nextMember, ParallelMembers, currentNode, MoveDownstream);
+                var output = this.GatherMembersBetweenColumns(nextMember, ParallelMembers, currentNode, MoveDownstream);
+
                 if (MoveDownstream)
+                {
                     members.AddRange(output);
+                }
             }
 
             return new HashSet<Member>(members).ToList();
@@ -410,22 +463,30 @@ namespace STAADModel
             if (!endHere)
             {
                 if (!currentNode.ConnectedMembers.Intersect(ParallelMembers).Where(m => m != Member).Any())
+                {
                     nextMember = null;
+                }
                 else
+                {
                     nextMember = currentNode.ConnectedMembers.Intersect(ParallelMembers).First(m => m != Member);
+                }
             }
             endHere = nextMember == null;
 
             if (endHere)
             {
                 if (!MoveDownstream)
+                {
                     members.UnionWith(this.GatherMembersBetweenPrimaryMembers(Member, ParallelMembers, currentNode, true));
+                }
             }
             else
             {
-                IEnumerable<Member> output = this.GatherMembersBetweenPrimaryMembers(nextMember, ParallelMembers, currentNode, MoveDownstream);
+                var output = this.GatherMembersBetweenPrimaryMembers(nextMember, ParallelMembers, currentNode, MoveDownstream);
                 if (MoveDownstream)
+                {
                     members.UnionWith(output);
+                }
             }
 
             return members;
@@ -439,35 +500,47 @@ namespace STAADModel
             MEMBERCLASS memberClass;
 
             if (this.PrimaryMembers.Contains(Member))
+            {
                 memberClass = MEMBERCLASS.PRIMARY;
+            }
             else if (this.SecondaryMembers.Contains(Member))
+            {
                 memberClass = MEMBERCLASS.SECONDARY;
+            }
             else if (this.TertiaryMembers.Contains(Member))
+            {
                 memberClass = MEMBERCLASS.TERTIARY;
+            }
             else
+            {
                 memberClass = MEMBERCLASS.UNSPECIFIED;
+            }
 
             return memberClass;
         }
 
         private bool CheckMemberRestraint(Member MemberToCheck, Beam StartBeam, MEMBERCLASS MemberClass)
         {
-            bool output;
-            HashSet<Node> nodes;
+            bool output = false;
 
             // Gather all nodes connected to the beam to check or any beams parallel to it
-            nodes = new HashSet<Node>(BeamHelpers.GatherParallelBeams(StartBeam).SelectMany(b => new List<Node>() { b.StartNode, b.EndNode }));
+            var nodes = new HashSet<Node>(BeamHelpers.GatherParallelBeams(StartBeam).SelectMany(b => new List<Node>() { b.StartNode, b.EndNode }));
 
             // Check if any of the connected members are class above the current member
-            IEnumerable<Member> connectedMembers = nodes.SelectMany(n => n.ConnectedMembers).Where(m => m != null && m != MemberToCheck);
+            var connectedMembers = nodes.SelectMany(n => n.ConnectedMembers).Where(m => m != null && m != MemberToCheck);
+
             if (MemberClass == MEMBERCLASS.PRIMARY)
+            {
                 output = connectedMembers.Any(m => this.PrimaryMembers.Contains(m));
+            }
             else if (MemberClass == MEMBERCLASS.SECONDARY)
+            {
                 output = connectedMembers.Any(m => this.PrimaryMembers.Contains(m) || this.SecondaryMembers.Contains(m));
+            }
             else if (MemberClass == MEMBERCLASS.TERTIARY)
+            {
                 output = connectedMembers.Any(m => this.PrimaryMembers.Contains(m) || this.SecondaryMembers.Contains(m) || this.TertiaryMembers.Contains(m));
-            else
-                output = false;
+            }
 
             return output;
         }
@@ -482,37 +555,42 @@ namespace STAADModel
         /// <returns>The chain of restrained braces</returns>
         public bool CheckBraceRestraint(Beam StartBrace, HashSet<Node> CheckedNodes = null, Node LastNode = null, bool MoveDownstream = false)
         {
-            bool output;
-            Node currentNode;
-
             if (CheckedNodes == null)
+            {
                 CheckedNodes = new HashSet<Node>();
+            }
 
             // Determine which will be the next node depending on the beam orientation and direction of travel
-            currentNode = BeamHelpers.DetermineNextNode(StartBrace, LastNode, MoveDownstream);
+            var currentNode = BeamHelpers.DetermineNextNode(StartBrace, LastNode, MoveDownstream);
 
-            output = false;
+            bool output = false;
 
             if (!CheckedNodes.Contains(currentNode))
             {
                 CheckedNodes.Add(currentNode);
                 if (currentNode.ConnectedBeams.Any(b => this.PrimaryBeams.Contains(b))
-                    || currentNode.ConnectedMembers.SelectMany(m => m.Nodes).Any(n => n.ConnectedMembers.Any(m => m.Type == MEMBERTYPE.COLUMN)))
+                    || currentNode.ConnectedMembers.SelectMany(m => m.Nodes).Any(n => n.ConnectedMembers.Any(m => m.Type == MemberType.COLUMN)))
+                {
                     output = true;
+                }
                 else
                 {
-                    IEnumerable<Beam> nextBraces = currentNode.ConnectedBeams.Where(b => b != StartBrace && b.Spec == BEAMSPEC.MEMBERTRUSS);
+                    var nextBraces = currentNode.ConnectedBeams.Where(b => b != StartBrace && b.Spec == BeamSpec.MemberTruss);
+
                     if (nextBraces.Any())
                     {
-                        foreach (Beam brace in nextBraces)
+                        foreach (var brace in nextBraces)
                         {
                             if (output = this.CheckBraceRestraint(brace, CheckedNodes, currentNode, MoveDownstream))
+                            {
                                 break;
+                            }
                         }
                     }
-                    else
-                        if (!MoveDownstream)
+                    else if (!MoveDownstream)
+                    {
                         output = this.CheckBraceRestraint(StartBrace, CheckedNodes, currentNode, true);
+                    }
                 }
             }
 

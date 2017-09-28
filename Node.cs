@@ -17,11 +17,11 @@ namespace STAADModel
             get { return this.Support != null; }
         }
 
-        public double x { get; set; }
+        public double X { get; set; }
 
-        public double y { get; set; }
+        public double Y { get; set; }
 
-        public double z { get; set; }
+        public double Z { get; set; }
 
         public Support Support
         {
@@ -51,24 +51,28 @@ namespace STAADModel
         public Node(int Number, double x, double y, double z) : this()
         {
             this.ID = Number;
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            this.X = x;
+            this.Y = y;
+            this.Z = z;
         }
 
         public Vector3D ToVector()
         {
-            return new Vector3D(this.x, this.y, this.z);
+            return new Vector3D(this.X, this.Y, this.Z);
         }
 
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            Node n = obj as Node;
+            var n = obj as Node;
             if ((object)n == null)
+            {
                 return false;
+            }
 
             return this.ID == n.ID;
         }
@@ -76,18 +80,24 @@ namespace STAADModel
         public bool Equals(Node n)
         {
             if ((object)n == null)
+            {
                 return false;
+            }
 
             return this.ID == n.ID;
         }
 
         public static bool operator ==(Node a, Node b)
         {
-            if (Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
+            {
                 return true;
+            }
 
             if (((object)a == null) || ((object)b == null))
+            {
                 return false;
+            }
 
             return a.ID == b.ID;
         }

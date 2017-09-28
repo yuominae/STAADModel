@@ -47,7 +47,7 @@ namespace STAADModel
             // Process all of the remaining beams
             this.ProcessBeams(remainingBeams, members);
 
-            var test = members.Any(m => m.Beams.Any(b => b.Member == null));
+            bool test = members.Any(m => m.Beams.Any(b => b.Member == null));
 
             this.ClassifyMembers(members);
 
@@ -70,7 +70,7 @@ namespace STAADModel
             // Process weightless members - These are removed from the nodes and members as they are not needed for member generation
             if (this.Configuration.IgnoreWeightlessMembers && Beams.Any(o => o.Material.Density == 0))
             {
-                foreach (Beam b in Beams.Where(o => o.StartNode.ConnectedBeams.Any(b => b.Material.Density == 0) || o.EndNode.ConnectedBeams.Any(b => b.Material.Density == 0)))
+                foreach (var b in Beams.Where(o => o.StartNode.ConnectedBeams.Any(b => b.Material.Density == 0) || o.EndNode.ConnectedBeams.Any(b => b.Material.Density == 0)))
                 {
                     b.StartNode.ConnectedBeams.RemoveWhere(o => o.Material.Density == 0);
                     b.EndNode.ConnectedBeams.RemoveWhere(o => o.Material.Density == 0);
@@ -88,23 +88,23 @@ namespace STAADModel
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs("Preprocessing...", 0.5));
 
             // Process truss members and beams which are pinned at both ends - If truss members won't be processed they are removed from the nodes as they are not needed for member generation
-            if (this.Configuration.IgnoreTrussMembers && Beams.Any(o => o.Spec != BEAMSPEC.UNSPECIFIED))
+            if (this.Configuration.IgnoreTrussMembers && Beams.Any(o => o.Spec != BeamSpec.Unspecified))
             {
-                foreach (Beam beam in Beams.Where(b => new List<Node>() { b.StartNode, b.EndNode }.SelectMany(n => n.ConnectedBeams).Any(cb => cb.Spec != BEAMSPEC.UNSPECIFIED)))
+                foreach (var beam in Beams.Where(b => new List<Node>() { b.StartNode, b.EndNode }.SelectMany(n => n.ConnectedBeams).Any(cb => cb.Spec != BeamSpec.Unspecified)))
                 {
-                    beam.StartNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
-                    beam.EndNode.ConnectedBeams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
+                    beam.StartNode.ConnectedBeams.RemoveWhere(o => o.Spec == BeamSpec.MemberTruss);
+                    beam.EndNode.ConnectedBeams.RemoveWhere(o => o.Spec == BeamSpec.MemberTruss);
                 }
-                Beams.RemoveWhere(o => o.Spec == BEAMSPEC.MEMBERTRUSS);
+                Beams.RemoveWhere(o => o.Spec == BeamSpec.MemberTruss);
             }
 
             // Fire status update event
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs(statusMessage, 0.75));
 
             // Process beams which are pinned at both ends - These result each in a member on their own
-            foreach (Beam beam in Beams.Where(b => b.StartRelease.IsReleased && b.EndRelease.IsReleased))
+            foreach (var beam in Beams.Where(b => b.StartRelease.IsReleased && b.EndRelease.IsReleased))
             {
-                Members.Add(this.GenerateNewMember(++memberCount, this.StaadModel.Beams.Single(b => b.ID == beam.ID)));
+                Members.Add(this.GenerateNewMember(++memberCount, this.StaadModel.Beams.Single(b => b.Id == beam.Id)));
                 beam.StartNode.ConnectedBeams.Remove(beam);
                 beam.EndNode.ConnectedBeams.Remove(beam);
             }
@@ -127,7 +127,7 @@ namespace STAADModel
             // Process the remaining beams
             while (Beams.Any())
             {
-                Beam currentBeam = Beams.First();
+                var currentBeam = Beams.First();
                 Member newMember;
 
                 List<Beam> beams;
@@ -146,8 +146,10 @@ namespace STAADModel
                 this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs("Generating members...", 1 - (Beams.Count / totalBeams), newMember));
 
                 // Select the latest member if required
-                if (SelectIndividualMembersDuringCreation)
-                    this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(newMember.Beams.Select(o => o.ID).ToArray());
+                if (this.SelectIndividualMembersDuringCreation)
+                {
+                    this.StaadModel.StaadWrapper.Geometry.SelectMultipleBeams(newMember.Beams.Select(o => o.Id).ToArray());
+                }
             }
         }
 
@@ -160,7 +162,7 @@ namespace STAADModel
         private List<Beam> GatherMemberBeams(Beam Beam, bool MoveDownStream)
         {
             bool terminate;
-            List<Beam> beams = new List<Beam>() { Beam };
+            var beams = new List<Beam>() { Beam };
             IEnumerable<Beam> parallelBeams = new List<Beam>();
             IEnumerable<Beam> nonParallelBeams = new List<Beam>();
 
@@ -173,53 +175,77 @@ namespace STAADModel
 
             // Check non-parallel beams
             if (!terminate && nonParallelBeams.Any())
+            {
                 if (!(this.Configuration.VerticalMembersTakePrecedence && Beam.IsParallelToY) || this.Configuration.LargerMembersTakePrecedence)
-                    foreach (Beam b in nonParallelBeams)
+                {
+                    foreach (var b in nonParallelBeams)
+                    {
                         if (terminate = this.ResolveBeamIntersection(Beam, b, MoveDownStream))
+                        {
                             break;
+                        }
+                    }
+                }
+            }
 
             if (!terminate && parallelBeams.Any())
-                foreach (Beam beam in parallelBeams)
+            {
+                foreach (var beam in parallelBeams)
                 {
                     // Check if beam materials are continuous
                     if (this.Configuration.BreakAtMaterialChanges && Beam.Material != beam.Material)
+                    {
                         break;
+                    }
 
                     // Check if beam properties are continuous
                     if (this.Configuration.BreakAtPropertyChanges && !Beam.CompareProperties(beam))
+                    {
                         break;
+                    }
 
                     // Check if beta angle is continuous
                     if (this.Configuration.BreakAtBetaAngleChanges && Beam.BetaAngle != beam.BetaAngle)
+                    {
                         break;
+                    }
 
                     // Check beam releases
                     // If moving downstream, use the start release, else use the end release. Invert releases if necessary, depending on beam relative direction
-                    BEAMRELATIVEDIRECTION beamDirection = Beam.DetermineBeamRelativeDirection(beam);
+                    var beamDirection = Beam.DetermineBeamRelativeDirection(beam);
                     if (this.Configuration.BreakAtReleases && beam.HasReleases)
                     {
-                        if (beamDirection == BEAMRELATIVEDIRECTION.CODIRECTIONAL)
+                        if (beamDirection == BeamRelativeDirection.CODIRECTIONAL)
                         {
                             if ((MoveDownStream && beam.EndRelease.IsReleased) || (!MoveDownStream && beam.StartRelease.IsReleased))
+                            {
                                 beams.Add(beam);
+                            }
                             else
+                            {
                                 break;
+                            }
                         }
                         else
                         {
                             if ((MoveDownStream && beam.StartRelease.IsReleased) || (!MoveDownStream && beam.EndRelease.IsReleased))
+                            {
                                 beams.Add(beam);
+                            }
                             else
+                            {
                                 break;
+                            }
                         }
                     }
                     else
                     {
-                        MoveDownStream = beamDirection == BEAMRELATIVEDIRECTION.CODIRECTIONAL ? MoveDownStream : !MoveDownStream;
+                        MoveDownStream = beamDirection == BeamRelativeDirection.CODIRECTIONAL ? MoveDownStream : !MoveDownStream;
                         beams.AddRange(this.GatherMemberBeams(beam, MoveDownStream));
                     }
                     break;
                 }
+            }
 
             return beams;
         }
@@ -236,16 +262,20 @@ namespace STAADModel
             {
                 // Check if the columns is at least as large as the connecting beam
                 if (b.SectionProperty.Ax >= Beam.SectionProperty.Ax)
+                {
                     terminate = true;
+                }
             }
             // Connecting beam is horizontal
             else
             {
                 if (b.SectionProperty.Ax >= this.Configuration.LargerMemberDifferentationFactor * Beam.SectionProperty.Ax)
                 {
-                    Node cn = MoveDownStream ? Beam.EndNode : Beam.StartNode;
+                    var cn = MoveDownStream ? Beam.EndNode : Beam.StartNode;
                     if ((cn == b.StartNode && !b.StartRelease.IsReleased) || (cn == b.EndNode && !b.EndRelease.IsReleased))
+                    {
                         terminate = true;
+                    }
                 }
             }
 
@@ -286,7 +316,9 @@ namespace STAADModel
                 endNode = startBeams.Last().StartNode;
             }
             else
+            {
                 throw new Exception("Member start and end nodes could not be determined");
+            }
 
             return new Member(MemberID, startNode, endNode, Beams);
         }
@@ -299,23 +331,25 @@ namespace STAADModel
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs(status));
 
             // Set members with supports
-            foreach (Member m in Members.Where(m => m.Nodes.Any(n => n.IsSupport)))
+            foreach (var m in Members.Where(m => m.Nodes.Any(n => n.IsSupport)))
+            {
                 m.IsSupported = true;
+            }
 
             // Fire status update event
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs(status, 0.333));
 
             //Determine columns (Vertical members directly connected to supports)
-            foreach (Member member in Members.Where(m => (this.StaadModel.ZAxisUp ? m.IsParallelToZ : m.IsParallelToY) && m.IsSupported))
+            foreach (var member in Members.Where(m => (this.StaadModel.ZAxisUp ? m.IsParallelToZ : m.IsParallelToY) && m.IsSupported))
             {
-                member.Type = MEMBERTYPE.COLUMN;
+                member.Type = MemberType.COLUMN;
                 IEnumerable<Member> membersToCheck = new List<Member>() { member };
                 IEnumerable<Member> checkedMembers = new List<Member>();
                 IEnumerable<Member> verticalMembers;
                 // Keep checking all connected members
                 while ((verticalMembers = membersToCheck.SelectMany(mtc => mtc.OutgoingMembers.Union(mtc.IncomingMembers).Where(m => m.IsParallelToY)).Except(checkedMembers)).Any())
                 {
-                    verticalMembers.ToList().ForEach(m => m.Type = MEMBERTYPE.COLUMN);
+                    verticalMembers.ToList().ForEach(m => m.Type = MemberType.COLUMN);
                     checkedMembers = checkedMembers.Union(membersToCheck);
                     membersToCheck = verticalMembers;
                 }
@@ -325,16 +359,25 @@ namespace STAADModel
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs(status, 0.666));
 
             // Assign types to the remaining members
-            foreach (Member member in Members.Where(m => m.Type == MEMBERTYPE.OTHER))
+            foreach (var member in Members.Where(m => m.Type == MemberType.OTHER))
+            {
                 if (this.StaadModel.ZAxisUp ? member.IsParallelToZ : member.IsParallelToY)
-                    member.Type = MEMBERTYPE.POST;
+                {
+                    member.Type = MemberType.POST;
+                }
+                else if (member.Beams.All(b => b.Spec != BeamSpec.Unspecified))
+                {
+                    member.Type = MemberType.BRACE;
+                }
+                else if (member.Beams.All(b => b.Spec == BeamSpec.Unspecified))
+                {
+                    member.Type = MemberType.BEAM;
+                }
                 else
-                    if (member.Beams.All(b => b.Spec != BEAMSPEC.UNSPECIFIED))
-                    member.Type = MEMBERTYPE.BRACE;
-                else if (member.Beams.All(b => b.Spec == BEAMSPEC.UNSPECIFIED))
-                    member.Type = MEMBERTYPE.BEAM;
-                else
-                    member.Type = MEMBERTYPE.OTHER;
+                {
+                    member.Type = MemberType.OTHER;
+                }
+            }
 
             // Fire status update event
             this.OnStatusUpdate(new MemberGeneratorStatusUpdateEventArgs(status, 1.0));
@@ -345,7 +388,9 @@ namespace STAADModel
         private void OnStatusUpdate(MemberGeneratorStatusUpdateEventArgs e)
         {
             if (this.StatusUpdate != null)
+            {
                 this.StatusUpdate(this, e);
+            }
         }
     }
 }

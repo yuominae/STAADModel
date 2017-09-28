@@ -27,22 +27,22 @@ namespace STAADModel
         /// </summary>
         public double LengthAB
         {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.x - this.StartNode.x, 2) + Math.Pow(this.EndNode.y - this.StartNode.y, 2) + Math.Pow(this.EndNode.z - this.StartNode.z, 2)); }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.X - this.StartNode.X, 2) + Math.Pow(this.EndNode.Y - this.StartNode.Y, 2) + Math.Pow(this.EndNode.Z - this.StartNode.Z, 2)); }
         }
 
         public double DeltaX
         {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.x - this.StartNode.x, 2)); }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.X - this.StartNode.X, 2)); }
         }
 
         public double DeltaY
         {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.y - this.StartNode.y, 2)); }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.Y - this.StartNode.Y, 2)); }
         }
 
         public double DeltaZ
         {
-            get { return Math.Sqrt(Math.Pow(this.EndNode.z - this.StartNode.z, 2)); }
+            get { return Math.Sqrt(Math.Pow(this.EndNode.Z - this.StartNode.Z, 2)); }
         }
 
         public bool IsSupported { get; set; }
@@ -90,7 +90,10 @@ namespace STAADModel
             get
             {
                 if (this._IncomingMembers == null)
+                {
                     this._IncomingMembers = this.StartNode.ConnectedBeams.Select(b => b.Member).Where(m => m != null && m != this).ToList();
+                }
+
                 return this._IncomingMembers;
             }
         }
@@ -100,7 +103,10 @@ namespace STAADModel
             get
             {
                 if (this._OutgoingMembers == null)
+                {
                     this._OutgoingMembers = this.EndNode.ConnectedBeams.Select(b => b.Member).Where(m => m != null && m != this).ToList();
+                }
+
                 return this._OutgoingMembers;
             }
         }
@@ -110,7 +116,10 @@ namespace STAADModel
             get
             {
                 if (this._IncomingParallelMembers == null)
-                    this._IncomingParallelMembers = this.IncomingMembers.Where(m => this.DetermineMemberRelation(m) == MEMBERRELATION.PARALLEL).ToList();
+                {
+                    this._IncomingParallelMembers = this.IncomingMembers.Where(m => this.DetermineMemberRelation(m) == MemberRelation.PARALLEL).ToList();
+                }
+
                 return this._IncomingParallelMembers;
             }
         }
@@ -120,7 +129,10 @@ namespace STAADModel
             get
             {
                 if (this._OutgoingParallelMembers == null)
-                    this._OutgoingParallelMembers = this.OutgoingMembers.Where(m => this.DetermineMemberRelation(m) == MEMBERRELATION.PARALLEL).ToList();
+                {
+                    this._OutgoingParallelMembers = this.OutgoingMembers.Where(m => this.DetermineMemberRelation(m) == MemberRelation.PARALLEL).ToList();
+                }
+
                 return this._OutgoingParallelMembers;
             }
         }
@@ -130,7 +142,7 @@ namespace STAADModel
             get { return this.Nodes.SelectMany(n => n.ConnectedBeams.Select(b => b.Member).Where(m => m != null && m != this)); }
         }
 
-        public MEMBERTYPE Type { get; set; }
+        public MemberType Type { get; set; }
 
         public Member(int ID, Beam Beam)
             : this(ID, Beam.StartNode, Beam.EndNode, new List<Beam>() { Beam })
@@ -142,25 +154,25 @@ namespace STAADModel
             this.ID = ID;
             this.StartNode = StartNode;
             this.EndNode = EndNode;
-            this.Type = MEMBERTYPE.OTHER;
+            this.Type = MemberType.OTHER;
 
             this.SortBeamsAndNodes(Beams);
             this.Beams.ForEach(b => b.Member = this);
         }
 
-        public MEMBERRELATION DetermineMemberRelation(Member Member)
+        public MemberRelation DetermineMemberRelation(Member Member)
         {
             switch (this.Beams.First().DetermineBeamRelationship(Member.Beams.First()))
             {
-                case BEAMRELATION.PARALLEL:
-                    return MEMBERRELATION.PARALLEL;
+                case BeamRelation.Parallel:
+                    return MemberRelation.PARALLEL;
 
-                case BEAMRELATION.ORTHOGONAL:
-                    return MEMBERRELATION.ORTHOGONAL;
+                case BeamRelation.Orthogonal:
+                    return MemberRelation.ORTHOGONAL;
 
-                case BEAMRELATION.OTHER:
+                case BeamRelation.Other:
                 default:
-                    return MEMBERRELATION.OTHER;
+                    return MemberRelation.OTHER;
             }
         }
 
@@ -188,11 +200,15 @@ namespace STAADModel
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            Member m = obj as Member;
+            var m = obj as Member;
             if ((object)m == null)
+            {
                 return false;
+            }
 
             return this.ID == m.ID;
         }
@@ -200,18 +216,24 @@ namespace STAADModel
         public bool Equals(Member m)
         {
             if ((object)m == null)
+            {
                 return false;
+            }
 
             return this.ID == m.ID;
         }
 
         public static bool operator ==(Member a, Member b)
         {
-            if (Object.ReferenceEquals(a, b))
+            if (ReferenceEquals(a, b))
+            {
                 return true;
+            }
 
             if (((object)a == null) || ((object)b == null))
+            {
                 return false;
+            }
 
             return a.ID == b.ID;
         }
